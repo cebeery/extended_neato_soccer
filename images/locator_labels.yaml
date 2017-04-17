@@ -1,0 +1,6 @@
+test.jpg: 
+  location: [350,265]
+  size: 200
+00_neatoSoccer.png:
+  location: [10,10]
+  size: 50 
