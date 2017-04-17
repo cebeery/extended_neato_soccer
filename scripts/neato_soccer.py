@@ -31,7 +31,7 @@ class NeatoSoccerPlayer(object):
         self.transition = True
 
         # Setup Neural Net Class Instance
-        self.nn = BallDetector
+        self.nn = BallDetector()
 
         # Setup raw camera visualization
         self.img = None                 #the latest image from the camera
@@ -41,7 +41,7 @@ class NeatoSoccerPlayer(object):
 
         # Setup ROS Node
         rospy.init_node('neato_soccer')
-        self.rate = rospy.rate(10)
+        self.rate = rospy.Rate(10)
         rospy.Subscriber(image_topic, Image, self.processImage)
         rospy.Subscriber("/bump", Bump, self.processBump)
         self.cmd_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
@@ -56,9 +56,9 @@ class NeatoSoccerPlayer(object):
 
     def processBump(self, msg):
         """ End node if ball kicked or neato runs into something """
-        #TODO verfiy "any" call setup
-        if any(bump in msg.values):
-            rospy.signal_shutdown("I kicked a thing!")
+        if msg.leftFront or msg.rightFront or msg.leftSide or msg.rightSide:
+            print "Crash!"
+            rospy.signal_shutdown("Neato hit object")
 
     def determineBall(self):
         """
@@ -73,14 +73,14 @@ class NeatoSoccerPlayer(object):
         ball = None
 
         # perform state funtionally
-        if transition:
-            "Transistioning to determineBall state"
+        if self.transition:
+            print "Transitioning to determineBall state"
             self.cmd = Twist()
             self.currentImg = self.img
-            self.window_y, self.window_x,_ self.currentImg.shape
+            self.window_y, self.window_x,_ = self.currentImg.shape
             self.transition = False
         else:
-            "Looking for ball"
+            print "Looking for ball"
             ball = self.nn.classify(self.currentImg)
 
         # change state if needed
@@ -89,7 +89,8 @@ class NeatoSoccerPlayer(object):
             self.state = self.alignNeato
             self.transition = True
         elif ball is not None:
-            rospy.signal_shutdown("Where ball? Want ball!")     
+            print "Where ball? Want ball!"
+            rospy.signal_shutdown("No Soccerball was detected in view")     
 
     def alignNeato(self):
         """
@@ -104,28 +105,26 @@ class NeatoSoccerPlayer(object):
 
         # perform state funtionally
         if self.transition:
-            "Transistioning to alignNeato state"
+            print "Transitioning to alignNeato state"
             self.cmd = Twist()
             self.transition = False
 
         else:
-            x,_,_ = colorFilteredCOM(self.currentImg)
-            x,_,_ = blobLocator(self.currentImg)
+            #use on of vision suite methods
+            #location,_ = colorFilteredCOM(self.currentImg)
+            location,_ = blobLocator(self.currentImg)
 
             #determining if ball is within alignment threshold
-            moments = cv2.moments(self.binary_image)
-            if moments['m00'] != 0:
-                x,_ = moments['m10']/moments['m00'], moments['m01']/moments['m00']
-                diff = x - self.window_x
+            diff = location[0] - self.window_x
+            diff = 1
 
             if math.fabs(diff) < 20:
                 #move forward if within 20 pixels ahead
                 aligned = True
-                break 
-
-            #setting proportional twist control
-            kp = .005           
-            self.cmd.angular.z = -diff*kp
+            else:
+                #setting proportional twist control
+                kp = .005           
+                self.cmd.angular.z = -diff*kp
 
         # change state if needed
         if aligned:
@@ -140,15 +139,19 @@ class NeatoSoccerPlayer(object):
         """
 
         # perform state funtionally
-        if transition:
-            "Transistioning to kickBall state"
+        if self.transition:
+            print "Transitioning to kickBall state"
             self.cmd = Twist()
+            self.transition = False
         else:
             self.cmd.linear.x = 0.3 
+            self.transition = True
+            #possibly temp -> stop on circle too big instead of rechecking/remove cmd 0 in transitions
+            self.state=self.determineBall
 
     def run(self):
         """ The main run loop"""
-        rospy.on_shutdown(lambda: self.cmd.publish(Twist())
+        rospy.on_shutdown(lambda: self.cmd_pub.publish(Twist()))
 
         while not rospy.is_shutdown():
             if self.img is not None:
