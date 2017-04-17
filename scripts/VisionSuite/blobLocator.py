@@ -14,7 +14,7 @@ if this file is run.
 
 
 def blobLocator(img):
-	return 10,20,30
+	return (10,20),30
 
 if __name__ == "__main__":
 	print blobLocator("foo")	# find the center and size of the soccer ball

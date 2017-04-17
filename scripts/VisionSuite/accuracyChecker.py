@@ -11,7 +11,10 @@ if this file is run.
 
 """
 
-import os, yaml, cv2
+import os, yaml, math, cv2
+from blobLocator import blobLocator as bl
+from colorFilteredCOM import colorFilteredCOM as cf
+
 
 class AccuracyChecker(object):
     def __init__(self,dir_path,img_name,lbl_name):
@@ -32,15 +35,36 @@ class AccuracyChecker(object):
     def drawLabel(self):
         self.drawCircle((self.lbl_center),self.lbl_size,(0,0,255))
 
+    def calcErr(self,center,size):
+        x_error = math.fabs(self.lbl_center[0]-center[0]) 
+        y_error = math.fabs(self.lbl_center[1]-center[1]) 
+        size_error = math.fabs(self.lbl_size-size) 
+
+        return [x_error,y_error,size_error]
 
     def main(self):
         #Apply visual suite scripts
+        bl_center, bl_size = bl(self.img) #simpleBlob detecttor method
+        cf_center, cf_size = cf(self.img) #COM after color filter method
 
         #Calculate error
+        bl_error = self.calcErr(bl_center, bl_size)
+        cf_error = self.calcErr(cf_center, cf_size)
 
         #Print Error
+        print("Blob Method Error: \nX: " + str(bl_error[0]) 
+            + "\nY: " + str(bl_error[1])
+            + "\nSize: " + str(bl_error[2])
+            + "\n---")
+        print("Color Filtered COM Error: \nX: " + str(cf_error[0]) 
+            + "\nY: "  + str(cf_error[1])
+            + "\nSize: " + str(cf_error[2])
+            + "\n---")
 
         #Visualize Error
+        self.drawCircle((bl_center),bl_size,(255,0,0))
+        self.drawCircle((cf_center),cf_size,(0,255,0))
+
         cv2.imshow('Visualize Error', self.img)
         cv2.waitKey(0) #close on enter key event
 

@@ -14,7 +14,7 @@ if this file is run.
 
 
 def colorFilteredCOM(img):
-	return 10,20,30
+	return (100,500),100
 
 if __name__ == "__main__":
 	print colorFilteredCOM("foo")
