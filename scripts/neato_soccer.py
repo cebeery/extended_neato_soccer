@@ -9,6 +9,9 @@ from cv_bridge import CvBridge
 from neato_node.msg import Bump
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Twist, Vector3
+from NeuralNet.balldetector import BallDetector
+from VisionSuite.blobLocator import blobLocator
+from VisionSuite.colorFilteredCOM import colorFilteredCOM
 
 
 class NeatoSoccerPlayer(object):
@@ -27,12 +30,14 @@ class NeatoSoccerPlayer(object):
         self.state = self.determineBall
         self.transition = True
 
+        # Setup Neural Net Class Instance
+        self.nn = BallDetector
+
         # Setup raw camera visualization
         self.img = None                 #the latest image from the camera
         self.currentImg = None          #curretn image being processed
         self.bridge = CvBridge()        #used to convert ROS messages to OpenCV
         cv2.namedWindow('video_window') #create window for live video stream
-
 
         # Setup ROS Node
         rospy.init_node('neato_soccer')
@@ -76,7 +81,7 @@ class NeatoSoccerPlayer(object):
             self.transition = False
         else:
             "Looking for ball"
-            ball = neuralnet(self.currentImg)
+            ball = self.nn.classify(self.currentImg)
 
         # change state if needed
         if ball:
@@ -104,8 +109,8 @@ class NeatoSoccerPlayer(object):
             self.transition = False
 
         else:
-            x,_,_ = colorFilterCOM(self.currentImg)
-            x,_,_ = blobDetector(self.currentImg)
+            x,_,_ = colorFilteredCOM(self.currentImg)
+            x,_,_ = blobLocator(self.currentImg)
 
             #determining if ball is within alignment threshold
             moments = cv2.moments(self.binary_image)
