@@ -15,3 +15,23 @@ To get the MLP running, we quickly built a system to crop, grayscale, and down-s
 There are three likely reasons this is happening. The obvious one is that 20 images does not come close to approaching the size of data sets used for typical machine learning projects - common examples of starter ML projects use about 50,000 images to train on. The second likely reason is that, as described, an MLP does a poor job of understanding the 2D structure of an image. A convolutional neural network - a variant that does account for 2D structure - may do a better job and require less training to achieve reasonable results. A third possible reason is simply that our MLP is structured poorly. At present, the 128x128 input pixel values are fed into 100 hidden nodes, and then to 1 output node. That structure is a wild guess and we'll need to do more research, test other structures, or ask for help to determine what a reasonable MLP structure for this project is.
 
 Next, we'll be trying to address the first problem - the lack of sufficient training images - by building a system to rapidly capture and tag images from our robot's camera. That should allow us to get into the thousands of tagged ball and non-ball images that will allow us to better determine whether using an MLP is a tenable solution to object recognition, or if we need a more advanced model.
+
+### Visual Suite Development
+
+**4/18/17** - The intent of the visual suite is to provide multiple methods of locating and sizing a foam soccer ball with in a image taken by the Neato robot platform. In order to quantify and understand the accuracy of methods to be implimented in the visual suite, a simple script was created to both display the output of those methods against the input image as well as calculate the discrepency between the methods' outputs and the actual location of the ball. 
+
+This script, [accuracyChecker.py](scripts/accuracyChecker.py), contains a class of the same name which requires the name of the image file to be tested against as well as the name of the file that contains the images label. The path to the directory containing these two files is assumed to be identical and is also passed in to the class when it is initiallized. The label file, [locator_labels.yaml](images/locator_labels.yaml), contains the sizes and x,y-location of the soccer ball in each of the test images. The label takes the form of 
+
+##_neatoSoccer.png:
+location: [x,y]
+size: int
+
+where ## is replaced with the image's sequence number, x and y are replaced by the x,y pixel location of the ball's center in the image, and int is replaced by the diameter of the ball within the image. These labels were created via trial and error until visually correct when drawn in circle form on the original test images. 
+
+The accuracyChecker script passes the test image to each method in the visual suite and records the returns.  Static return placeholder code is currently in place in each of visual suite locator methods to confirm the accuracy code was functioning correctly. They return information in the form of *(x,y),size*, where x,y,size are all integers. The accuracy script then calculates the Pythagorean distance between the label's x,y-location and the visual suite method's x,y-location as well as the absolute error in size between the label's size and the visual suite method's size. In addition to calculating the accuracy of the visual suite's methods, they are also visualized. 
+
+![documentation/accuracyChecker_lbl.png][documentation/accuracyChecker_lbl.png] 
+
+Here is shown the current call and output of the accuracyChecker.py script. In red is the label. The green and blue circles are the results of the visual suite methods. Note also the readout in the terminal of the quanitiative accuracy of the two visual suite methods.  
+
+
