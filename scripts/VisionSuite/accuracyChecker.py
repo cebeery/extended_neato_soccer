@@ -82,7 +82,7 @@ if __name__ == "__main__":
     cur_path = os.path.dirname(os.path.realpath(__file__)) 	#path to script
     rel_path = "../../images/"								#relative path to img folder
     dir_path = os.path.join(cur_path,rel_path)				#full path to img folder
-    img_name = "test.jpg"									#img name
+    img_name = "06_neatoSoccer.png"									#img name
     lbl_file = "locator_labels.yaml"						#label file name
 
     # Create and Run instance
