@@ -22,9 +22,9 @@ Next, we'll be trying to address the first problem - the lack of sufficient trai
 
 This script, [accuracyChecker.py](scripts/accuracyChecker.py), contains a class of the same name which requires the name of the image file to be tested against as well as the name of the file that contains the images label. The path to the directory containing these two files is assumed to be identical and is also passed in to the class when it is initiallized. The label file, [locator_labels.yaml](images/locator_labels.yaml), contains the sizes and x,y-location of the soccer ball in each of the test images. The label takes the form of 
 
-##_neatoSoccer.png:
-location: [x,y]
-size: int
+`##_neatoSoccer.png:`<br>
+`  location: [x,y]`<br> 
+`  size: int`
 
 where ## is replaced with the image's sequence number, x and y are replaced by the x,y pixel location of the ball's center in the image, and int is replaced by the diameter of the ball within the image. These labels were created via trial and error until visually correct when drawn in circle form on the original test images. 
 
