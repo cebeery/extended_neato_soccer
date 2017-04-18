@@ -28,9 +28,9 @@ size: int
 
 where ## is replaced with the image's sequence number, x and y are replaced by the x,y pixel location of the ball's center in the image, and int is replaced by the diameter of the ball within the image. These labels were created via trial and error until visually correct when drawn in circle form on the original test images. 
 
-The accuracyChecker script passes the test image to each method in the visual suite and records the returns.  Static return placeholder code is currently in place in each of visual suite locator methods to confirm the accuracy code was functioning correctly. They return information in the form of *(x,y),size*, where x,y,size are all integers. The accuracy script then calculates the Pythagorean distance between the label's x,y-location and the visual suite method's x,y-location as well as the absolute error in size between the label's size and the visual suite method's size. In addition to calculating the accuracy of the visual suite's methods, they are also visualized. 
+The accuracyChecker script passes the test image to each method in the visual suite and records the returns.  Static return placeholder code is currently in place in each of visual suite locator methods to confirm the accuracy code was functioning correctly. They return information in the form of *(x,y),size*, where x,y,size are all integers. The accuracy script then calculates the Pythagorean distance between the label's x,y-location and the visual suite method's x,y-location as well as the absolute error in size between the label's size and the visual suite method's size. In addition to calculating the accuracy of the visual suite's methods, they are also visualized using openCV's circle function. 
 
-![documentation/accuracyChecker_lbl.png][documentation/accuracyChecker_lbl.png] 
+![documentation/accuracyChecker_lbl.png](documentation/accuracyChecker_labelled.png) 
 
 Here is shown the current call and output of the accuracyChecker.py script. In red is the label. The green and blue circles are the results of the visual suite methods. Note also the readout in the terminal of the quanitiative accuracy of the two visual suite methods.  
 
