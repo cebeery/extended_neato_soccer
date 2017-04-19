@@ -79,19 +79,30 @@ class Network(NeuralNet):
 		return super(Network, self).predict(img)
 
 if __name__ == "__main__":
-	n = Network()
-	n.trainWith('./training-imgs/example', presentPrefix="boxes")
+	imageFolder = '../../images/training-imgs'
 
-	print "Avg prediction for box images: {}".format(
+	# Train the network with all of the images in the example folder,
+	# using their filenames ("no_boxes" or "boxes" as the tag)
+	n = Network()
+	n.trainWith(os.path.join(imageFolder, 'example'), presentPrefix="boxes")
+
+	# NOTE: the predictions below are NOT good form - we test on the images
+	# that we trained on. This is an example, not suitable for production
+
+	# Predict how likely it is that each of the box images contains a box.
+	# Ideally 1 for all of the images in this category.
+	print "Predictions for box images: {}".format(
 		n.predict([
-			'./training-imgs/example/boxes_00{}.png'.format(i)
+			os.path.join(imageFolder, 'example/boxes_00{}.png'.format(i))
 			for i in range(6)
 		])
 	)
 
-	print "Avg prediction for non-box images: {}".format(
+	# Predict how likely it is that each of the (first 10) non-box images
+	# contains a box. Ideally 0 for all of the images in this category.
+	print "Predictions for non-box images: {}".format(
 		n.predict([
-			'./training-imgs/example/no_boxes_00{}.png'.format(i)
+			os.path.join(imageFolder, 'example/no_boxes_00{}.png'.format(i))
 			for i in range(10)
 		])
 	)
