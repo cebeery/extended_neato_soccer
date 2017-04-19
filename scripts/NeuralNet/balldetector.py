@@ -7,14 +7,14 @@ balldetector.py
 An interface to the neural network that allows the classification of images as
 containing or not containing a ball.
 
-Example code at for this library is at the bottom of the file and will execute
-if this file is run.
+See example usage at bottom of file.
 
 """
 
 
 class BallDetector(object):
 	def __init__(self):
+		# TODO: Load NN weights & configure
 		pass
 
 	def classify(self, img):
