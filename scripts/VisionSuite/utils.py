@@ -31,7 +31,7 @@ class ColorFilter(object):
 
         #visualize raw
         cv2.namedWindow('raw_window')
-        cv2.imshow('raw_window', self.IMG)ut -b vis
+        cv2.imshow('raw_window', self.IMG)
 
         #set callback for show color under mouse
         cv2.setMouseCallback('raw_window', self.process_mouse_event)
@@ -51,7 +51,7 @@ class ColorFilter(object):
         print ("Hover over raw image to see color values")
         print ("Click close x to close window and submit most recent trackbar values")
         while cv2.getWindowProperty('threshold_image', cv2.WND_PROP_AUTOSIZE) >= 0:
-            binary = cv2.inRange(self.IMG, np.array(self.lower), np.array(self.upper))  
+            binary = cv2.inRange(self.IMG, self.lower, self.upper)  
             cv2.imshow("threshold_image", binary)
             cv2.waitKey(1) 
 
