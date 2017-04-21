@@ -59,7 +59,7 @@ if __name__ == "__main__":
     img_path = os.path.join(dir_path,img_name)              #img path
     img = cv2.imread(img_path)  
 
-    # Run filter
+    # Run Detector
     #descriptor = colorFilteredCOM(img)
     descriptor = colorFilteredCOM(img, setThresholds=True, visualize=True)
     print descriptor
