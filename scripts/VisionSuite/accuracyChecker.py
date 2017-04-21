@@ -60,11 +60,11 @@ class AccuracyChecker(object):
         cf_error = self.calcErr(cf_center, cf_size)
 
         #Print Error
-        print("Blob Method Error: " 
+        print("Blob Method Error: (Blue)" 
             + "\nDistance: " + str(bl_error[0]) 
             + "\nSize: " + str(bl_error[1])
             + "\n---")
-        print("Color Filtered COM Error: " 
+        print("Color Filtered COM Error: (Green)" 
             + "\nDistance: " + str(cf_error[0]) 
             + "\nSize: " + str(cf_error[1])
             + "\n---")
