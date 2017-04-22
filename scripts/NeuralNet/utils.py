@@ -70,9 +70,13 @@ def formatImage(rawImg, imgSize=IMAGE_SIZE):
 
 	"""
 
-	# Convert image to gray-scale (if it is not already)
-	grayImg = cv2.cvtColor(rawImg, cv2.COLOR_BGR2GRAY) \
-	if len(rawImg.shape) > 2 else rawImg
+	# Convert image to gray-scale (if it is not already).
+	# Accept either formats with 3 channels, eg. (640, 480, 3)
+	# Or 1 channel, eg. (640, 480, 1) and reformat to
+	# a more compact (640, 480) representation
+	grayImg = cv2.cvtColor(rawImg, cv2.COLOR_BGR2GRAY)  \
+		if len(rawImg.shape) > 2 and rawImg.shape[2] != 1 \
+		else rawImg.reshape(rawImg.shape[:2])
 
 	# Crop image to be a square
 	height, width = grayImg.shape
