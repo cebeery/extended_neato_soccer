@@ -17,6 +17,8 @@ import os
 import numpy as np
 import Image
 
+IMAGE_SIZE = 64
+
 class Network(NeuralNet):
 	def __init__(self):
 
@@ -30,7 +32,7 @@ class Network(NeuralNet):
 			],
 
 			# Layer parameters
-			input_shape=(None, 128, 128),		# Shape of the input (# imgs, rows, cols)
+			input_shape=(None, IMAGE_SIZE, IMAGE_SIZE),		# Shape of the input (# imgs, rows, cols)
 			hidden_num_units=100,						# Number of units in each hidden layer
 			output_nonlinearity=None,				# BLACKBOX: Output uses identity function
 			output_num_units=1,							# Target values (Ball: y/n, x-coord, y-coord, radius)

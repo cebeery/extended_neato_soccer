@@ -16,7 +16,7 @@ import os
 import numpy as np
 
 # Constants
-IMAGE_SIZE = 128
+IMAGE_SIZE = 64
 
 
 def formatImageFiles(srcPath, dstPath, imgSize=IMAGE_SIZE):
