@@ -41,7 +41,7 @@ def blobLocator(img,
         cv2.waitKey(0)
 
     # Pass back describtor
-    #return ( int(x),int(y) ), int(radius)
+    return ( int(100),int(100) ), int(100)
 
 if __name__ == "__main__":
     # Load Image

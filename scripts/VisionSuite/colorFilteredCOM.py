@@ -46,6 +46,7 @@ def colorFilteredCOM(img,
     # TODO: Visualize
     if visualize:
         pass
+        
 
     # Pass back describtor
     return ( int(x),int(y) ), int(radius)
