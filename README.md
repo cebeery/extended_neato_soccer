@@ -16,7 +16,6 @@ There are three likely reasons this is happening. The obvious one is that 20 ima
 
 Next, we'll be trying to address the first problem - the lack of sufficient training images - by building a system to rapidly capture and tag images from our robot's camera. That should allow us to get into the thousands of tagged ball and non-ball images that will allow us to better determine whether using an MLP is a tenable solution to object recognition, or if we need a more advanced model.
 
-**4/24/17** - 
 
 ### Visual Suite Development
 

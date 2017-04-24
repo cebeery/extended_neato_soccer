@@ -23,7 +23,7 @@ from cv_bridge import CvBridge
 
 # Constants
 IMAGE_SIZE = 480
-DOWNSAMPLE_SIZE = 16
+DOWNSAMPLE_SIZE = 32
 BALL_TAG = "ball"
 NO_BALL_TAG = "no_ball"
 
