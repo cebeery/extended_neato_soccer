@@ -22,7 +22,8 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 
 # Constants
-IMAGE_SIZE = 64
+IMAGE_SIZE = 480
+DOWNSAMPLE_SIZE = 16
 BALL_TAG = "ball"
 NO_BALL_TAG = "no_ball"
 
@@ -128,11 +129,12 @@ class BallTinder(object):
 
     # Format the image appropriately
     rawImg = self.bridge.imgmsg_to_cv2(imageMsg, desired_encoding="mono8")
-    formattedImg = utils.formatImage(rawImg)
+    croppedImg = utils.formatImage(rawImg, downsample=False)
+    formattedImg = utils.formatImage(rawImg, imgSize=IMAGE_SIZE)
 
     # Display & publish current image
     self.pub.publish(self.bridge.cv2_to_imgmsg(formattedImg))
-    pygame.surfarray.blit_array(self.screen, formattedImg)
+    pygame.surfarray.blit_array(self.screen, croppedImg)
 
     # Classify and save image file appropriately based on any current key-press
     keyInputs = pygame.key.get_pressed()

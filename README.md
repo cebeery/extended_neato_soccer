@@ -16,6 +16,8 @@ There are three likely reasons this is happening. The obvious one is that 20 ima
 
 Next, we'll be trying to address the first problem - the lack of sufficient training images - by building a system to rapidly capture and tag images from our robot's camera. That should allow us to get into the thousands of tagged ball and non-ball images that will allow us to better determine whether using an MLP is a tenable solution to object recognition, or if we need a more advanced model.
 
+**4/24/17** - 
+
 ### Visual Suite Development
 
 **4/18/17** - The intent of the visual suite is to provide multiple methods of locating and sizing a foam soccer ball with in a image taken by the Neato robot platform. In order to quantify and understand the accuracy of methods to be implimented in the visual suite, a simple script was created to both display the output of those methods against the input image as well as calculate the discrepency between the methods' outputs and the actual location of the ball. 

@@ -16,7 +16,7 @@ import os
 import numpy as np
 
 # Constants
-IMAGE_SIZE = 64
+IMAGE_SIZE = 32
 
 
 def formatImageFiles(srcPath, dstPath, imgSize=IMAGE_SIZE):
@@ -49,11 +49,11 @@ def formatImageFiles(srcPath, dstPath, imgSize=IMAGE_SIZE):
 
 		cv2.imwrite(
 			os.path.join(dstPath, imgName),
-			formatImage(raw)
+			formatImage(raw, IMAGE_SIZE)
 		)
 
 
-def formatImage(rawImg, imgSize=IMAGE_SIZE):
+def formatImage(rawImg, imgSize=IMAGE_SIZE, downsample=True):
 	"""
 	Formats an image ndarray into the format needed for
 	training the neural network.
@@ -88,7 +88,10 @@ def formatImage(rawImg, imgSize=IMAGE_SIZE):
 	]
 
 	# Down-sample the image
-	return cv2.resize(cropped, (imgSize, imgSize))
+	if downsample:
+		cropped = cv2.resize(cropped, (imgSize, imgSize))
+
+	return cropped
 
 
 if __name__ == "__main__":
