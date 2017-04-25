@@ -77,7 +77,6 @@ class NeatoSoccerPlayer(object):
             print "Transitioning to determineBall state"
             self.cmd = Twist()
             self.currentImg = self.img
-            self.window_y, self.window_x,_ = self.currentImg.shape
             self.transition = False
         else:
             print "Looking for ball"
@@ -111,12 +110,12 @@ class NeatoSoccerPlayer(object):
 
         else:
             #use on of vision suite methods
-            #location,_ = colorFilteredCOM(self.currentImg)
-            location,_ = blobLocator(self.currentImg)
+            location,_ = colorFilteredCOM(self.currentImg)
+            #location,_ = blobLocator(self.currentImg)
 
             #determining if ball is within alignment threshold
-            diff = location[0] - self.window_x
-            diff = 1
+            window_y, window_x,_ = self.currentImg.shape
+            diff = location[0] - (window_x/2)
 
             if math.fabs(diff) < 20:
                 #move forward if within 20 pixels ahead

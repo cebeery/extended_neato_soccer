@@ -60,11 +60,11 @@ class AccuracyChecker(object):
         cf_error = self.calcErr(cf_center, cf_size)
 
         #Print Error
-        print("Blob Method Error: " 
+        print("Blob Method Error: (Blue)" 
             + "\nDistance: " + str(bl_error[0]) 
             + "\nSize: " + str(bl_error[1])
             + "\n---")
-        print("Color Filtered COM Error: " 
+        print("Color Filtered COM Error: (Green)" 
             + "\nDistance: " + str(cf_error[0]) 
             + "\nSize: " + str(cf_error[1])
             + "\n---")
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     cur_path = os.path.dirname(os.path.realpath(__file__)) 	#path to script
     rel_path = "../../images/"								#relative path to img folder
     dir_path = os.path.join(cur_path,rel_path)				#full path to img folder
-    img_name = "06_neatoSoccer.png"									#img name
+    img_name = "00_neatoSoccer.png"									#img name
     lbl_file = "locator_labels.yaml"						#label file name
 
     # Create and Run instance
