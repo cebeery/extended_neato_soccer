@@ -20,6 +20,9 @@ def blobLocator(img,
     setThresholds=False,
     bounds = {}):
 
+    #Assume failure
+    error = True
+
     # Manually adjust thresholding
     if setThresholds:
         pass
@@ -40,8 +43,13 @@ def blobLocator(img,
         cv2.imshow("blobDetector", bgr)
         cv2.waitKey(0)
 
-    # Pass back describtor
-    return ( int(100),int(100) ), int(100)
+    if error:
+        error = True
+        print "Blob Detector: can't find ball"
+        x,y,radius = 0,0,50
+
+    # Pass back describtor    
+    return (x,y), radius, error
 
 if __name__ == "__main__":
     # Load Image

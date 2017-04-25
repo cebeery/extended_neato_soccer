@@ -19,6 +19,9 @@ def houghCircles(img,
     setThresholds=False,
     bounds={"upperHSV":np.array([50,255,255]),"lowerHSV":np.array([45,180,30])}):
 
+    #Assume nothing is wrong
+    error = False 
+
     """
     # Create blurred img
     #blur = cv2.medianBlur(img, 5)
@@ -63,8 +66,9 @@ def houghCircles(img,
         x,y = circles[0][0],circles[0][1]
         radius =circles[0][2]
     else:
-        print "Can't find ball"
-        x,y,radius = 100,100,100
+        error = True
+        print "Hough Circles: can't find ball"
+        x,y,radius = 0,0,40
  
     # TODO: Visualize
     if visualize:
@@ -83,7 +87,7 @@ def houghCircles(img,
         cv2.waitKey(0)
 
     # Pass back describtor
-    return (x,y), radius
+    return (x,y), radius, error
 
 if __name__ == "__main__":
     """

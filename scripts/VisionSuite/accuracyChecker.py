@@ -39,28 +39,32 @@ class AccuracyChecker(object):
         """
         cv2.circle(self.img,location, size, color, 2)
 
-    def calcErr(self,center,size):
+    def calcErr(self,center,size,failed):
         """
         Calculates the absolute error of given verse labelled size
         and the distance between the given and labelled circle center
         """
-        x_error = self.lbl_center[0]-center[0] 
-        y_error = self.lbl_center[1]-center[1] 
-        distance = math.sqrt(x_error**2 + y_error**2)
-        size_error = math.fabs(self.lbl_size-size) 
+        if failed:
+            size_error = "no data"
+            distance   = "no data"
+        else:
+            x_error = self.lbl_center[0]-center[0] 
+            y_error = self.lbl_center[1]-center[1] 
+            distance = int(math.sqrt(x_error**2 + y_error**2))
+            size_error = int(math.fabs(self.lbl_size-size)) 
 
-        return [int(distance),int(size_error)]
+        return [distance,size_error]
 
     def main(self):
         #Apply visual suite scripts
-        bl_center, bl_size = bl(self.img) #simpleBlob detecttor method
-        cf_center, cf_size = cf(self.img) #COM after color filter method
-        hc_center, hc_size = hc(self.img) #Hough circles method
+        bl_center, bl_size, bl_failed = bl(self.img) #simpleBlob detector method
+        cf_center, cf_size, cf_failed = cf(self.img) #COM after color filter method
+        hc_center, hc_size, hc_failed = hc(self.img) #Hough circles method
 
         #Calculate error
-        bl_error = self.calcErr(bl_center, bl_size)
-        cf_error = self.calcErr(cf_center, cf_size)
-        hc_error = self.calcErr(hc_center, hc_size)
+        bl_error = self.calcErr(bl_center, bl_size, bl_failed)
+        cf_error = self.calcErr(cf_center, cf_size, cf_failed)
+        hc_error = self.calcErr(hc_center, hc_size, hc_failed)
 
         #Print Error
         print("Blob Method Error: (Blue)" 
