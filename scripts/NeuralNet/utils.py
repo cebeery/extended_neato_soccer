@@ -53,7 +53,17 @@ def formatImageFiles(srcPath, dstPath, imgSize=IMAGE_SIZE):
 		)
 
 
-def formatImage(rawImg, imgSize=IMAGE_SIZE, downsample=True):
+def crop(rawImg):
+	# Crop image to be a square
+	height, width = rawImg.shape[:2]
+	boxSize = height if height < width else width
+
+	return rawImg[
+		(height - boxSize) / 2 : (height + boxSize) / 2,
+		(width - boxSize) / 2  : (width + boxSize) / 2,
+	]
+
+def formatImage(rawImg, imgSize):
 	"""
 	Formats an image ndarray into the format needed for
 	training the neural network.
@@ -78,20 +88,10 @@ def formatImage(rawImg, imgSize=IMAGE_SIZE, downsample=True):
 		if len(rawImg.shape) > 2 and rawImg.shape[2] != 1 \
 		else rawImg.reshape(rawImg.shape[:2])
 
-	# Crop image to be a square
-	height, width = grayImg.shape
-	boxSize = height if height < width else width
-
-	cropped = grayImg[
-		(height - boxSize) / 2 : height + boxSize,
-		(width - boxSize) / 2  : width + boxSize,
-	]
+	cropped = crop(grayImg)
 
 	# Down-sample the image
-	if downsample:
-		cropped = cv2.resize(cropped, (imgSize, imgSize))
-
-	return cropped
+	return cv2.resize(cropped, (imgSize, imgSize))
 
 
 if __name__ == "__main__":

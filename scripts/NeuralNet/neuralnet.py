@@ -30,6 +30,8 @@ class Network(NeuralNet):
 				('hidden1', layers.DenseLayer),
 				('hidden2', layers.DenseLayer),
 				('hidden3', layers.DenseLayer),
+				('hidden4', layers.DenseLayer),
+				('hidden5', layers.DenseLayer),
 				('output', layers.DenseLayer),
 			],
 
@@ -38,6 +40,8 @@ class Network(NeuralNet):
 			hidden1_num_units=100,						# Number of units in each hidden layer
 			hidden2_num_units=100,						# Number of units in each hidden layer
 			hidden3_num_units=100,						# Number of units in each hidden layer
+			hidden4_num_units=100,						# Number of units in each hidden layer
+			hidden5_num_units=100,						# Number of units in each hidden layer
 			output_nonlinearity=None,				# BLACKBOX: Output uses identity function
 			output_num_units=1,							# Target values (Ball: y/n, x-coord, y-coord, radius)
 
@@ -47,13 +51,16 @@ class Network(NeuralNet):
 			update_momentum=0.9,						# BLACKBOX
 
 			regression=True,								# BLACKBOX
-			max_epochs=400,									# BLACKBOX
+			max_epochs=1000,								# BLACKBOX
 			verbose=1,											# Print output trace or not during training
 		)
 
 	def trainWith(self, imgsPath, presentPrefix):
 		# Get a list of all of the image paths from the imgPath directory
-		imgNames = os.listdir(imgsPath)
+		imgNames = [
+			e for e in os.listdir(imgsPath)
+			if os.path.isfile(os.path.join(imgsPath, e))
+		]
 		imgPaths = [
 			os.path.join(imgsPath, name)
 			for name in imgNames

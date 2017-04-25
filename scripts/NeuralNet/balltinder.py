@@ -37,13 +37,8 @@ CLASSIFICATION_CONTROLS = {
   NO_BALL_TAG: pygame.K_LEFT,
 }
 
-SAVE_PATH = os.path.join(
-  r.get_path('extended_neato_soccer'),
-  'images/training-imgs'
-)
 
-
-def filenumber(filename, tag):
+def filenumber(filename):
   """
   Utility for extracting the file-number from images prefixed
   with a particular tag.
@@ -57,7 +52,11 @@ def filenumber(filename, tag):
       -1 otherwise.
 
   """
-  return int(filename[-7:-4]) if filename[:len(tag)] == tag else -1
+
+  return int(filename[-7:-4])
+
+def filterByTag(filename, tag):
+  return filename[:len(tag)] == tag
 
 
 class BallTinder(object):
@@ -69,22 +68,18 @@ class BallTinder(object):
 
   def __init__(
     self,
-    filepath=SAVE_PATH
+    savePath
   ):
     """
     The init method of BallTinder.
 
     Input:
-      filepath (string): the directory to which to save recorded images
+      savePath (string): the directory to which to save recorded images
 
     Output:
       None
 
     """
-
-    rospy.init_node('balltinder')
-    rospy.Subscriber('camera/image_raw', Image, bt.tag)
-    self.pub = rospy.Publisher('camera/processed', Image, queue_size=10)
 
     # Use pygame to capture key input and show the images as they are processed
     pygame.init()
@@ -92,14 +87,14 @@ class BallTinder(object):
     self.screen = pygame.display.set_mode((IMAGE_SIZE, IMAGE_SIZE))
 
     self.bridge = CvBridge()
-    self.filepath = filepath
+    self.savePath = savePath
     self.skipCounter = 0
 
     # Read the directory of current images and start numbering
     # for new images such that they will continue the sequence
-    imgNames = [f for f in os.listdir(self.filepath) if os.path.isfile(f)]
-    self.noBallCount = max(imgNames, lambda fn: filenumber(fn, NO_BALL_TAG))
-    self.ballCount = max(imgNames, lambda fn: filenumber(fn, BALL_TAG))
+    imgNames = [f for f in os.listdir(self.savePath) if os.path.isfile(os.path.join(savePath, f))]
+    self.noBallCount = max([filenumber(f) for f in imgNames if filterByTag(f, NO_BALL_TAG)] or [0])
+    self.ballCount = max([filenumber(f) for f in imgNames if filterByTag(f, NO_BALL_TAG)] or [0])
 
     # Print instructions
     print "Welcome to ball tinder, a helper for rapidly classifying images as " \
@@ -109,6 +104,10 @@ class BallTinder(object):
       "does not contain a soccer ball, hold the left arrow key. If the ball is " \
       "partially on screen, the image contains a ball. If you are unsure, you can " \
       "opt to not press either arrow key."
+
+    rospy.init_node('balltinder')
+    rospy.Subscriber('camera/image_raw', Image, self.tag)
+    self.pub = rospy.Publisher('camera/processed', Image, queue_size=10)
 
     r = rospy.Rate(10)
     while not rospy.is_shutdown():
@@ -128,27 +127,29 @@ class BallTinder(object):
     """
 
     # Format the image appropriately
-    rawImg = self.bridge.imgmsg_to_cv2(imageMsg, desired_encoding="mono8")
-    croppedImg = utils.formatImage(rawImg, downsample=False)
-    formattedImg = utils.formatImage(rawImg, imgSize=IMAGE_SIZE)
+    rawImg = self.bridge.imgmsg_to_cv2(imageMsg, desired_encoding="passthrough")
+    croppedImg = utils.crop(rawImg)
+    formattedImg = utils.formatImage(rawImg, imgSize=DOWNSAMPLE_SIZE)
 
     # Display & publish current image
     self.pub.publish(self.bridge.cv2_to_imgmsg(formattedImg))
-    pygame.surfarray.blit_array(self.screen, croppedImg)
+
+    surfImg = pygame.surfarray.make_surface(croppedImg)
+    self.screen.blit(pygame.transform.rotate(surfImg, -90), (0, 0))
 
     # Classify and save image file appropriately based on any current key-press
-    keyInputs = pygame.key.get_pressed()
-    if keyInputs[CLASSIFICATION_CONTROLS[BALL_TAG]]:
-      recordImg(True, formattedImg)
-    elif keyInputs[CLASSIFICATION_CONTROLS[NO_BALL_TAG]]:
-      recordImg(False, formattedImg)
+    if pygame.key.get_pressed()[CLASSIFICATION_CONTROLS[BALL_TAG]]:
+      self.recordImg(True, formattedImg)
+    elif pygame.key.get_pressed()[CLASSIFICATION_CONTROLS[NO_BALL_TAG]]:
+      self.recordImg(False, formattedImg)
 
     # After all images for this iteration have been rendered into the buffer,
     # switch the buffer in to be the current display. IE. show everything
     # we've drawn since we last called this function
     pygame.display.flip()
+    pygame.event.pump()
 
-  def recordImg(self, isBall, formatImg, drop=False):
+  def recordImg(self, isBall, formattedImg, drop=False):
     """
     Tags, and saves an incoming image according to its passed parameters.
     Additionally colors the user's viewport edges to indicate when an image
@@ -170,12 +171,10 @@ class BallTinder(object):
     if isBall:
       count = self.ballCount
       tag = BALL_TAG
-      self.ballCount += 1
       outlineColor = (0, 255, 0)
     else:
       count = self.noBallCount
       tag = NO_BALL_TAG
-      self.noBallCount += 1
       outlineColor = (255, 0, 0)
 
     # Outline the window with a border in a color reflecting whether the
@@ -183,8 +182,8 @@ class BallTinder(object):
     pygame.draw.rect(
       self.screen,
       outlineColor,
-      Rect(0, 0, IMAGE_SIZE, IMAGE_SIZE),
-      width=10                              # Width of border. 0 means fill
+      pygame.Rect(0, 0, IMAGE_SIZE, IMAGE_SIZE),
+      10   # Width of border. 0 means fill
     )
 
     if self.skipCounter != 0:
@@ -193,10 +192,20 @@ class BallTinder(object):
     else:
       self.skipCounter = SKIPS_PER_CAPTURE
 
+    if isBall:
+        self.ballCount += 1
+    else:
+      self.noBallCount += 1
+
     # Save the image with the classification encoded
-    filename = "{}_{}.png".format(tag, str(count.zfill(6)))
-    cv2.imwrite(os.path.join(self.filepath, filename), formattedImg)
+    filename = "{}_{}.png".format(tag, str(count).zfill(6))
+    cv2.imwrite(os.path.join(self.savePath, filename), formattedImg)
 
 
 if __name__ == "__main__":
+  r = rospkg.RosPack()
+  path = os.path.join(
+    r.get_path('extended_neato_soccer'),
+    'images/training-imgs'
+  )
   bt = BallTinder(path)
