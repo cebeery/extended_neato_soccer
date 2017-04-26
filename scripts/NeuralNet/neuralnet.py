@@ -16,8 +16,10 @@ from nolearn.lasagne import NeuralNet
 import os
 import numpy as np
 import Image
+from config import CONFIG
 
-IMAGE_SIZE = 32
+# Load Constants
+NN_IMAGE_SIZE = CONFIG.get("NN_IMAGE_SIZE")
 
 class Network(NeuralNet):
 	def __init__(self):
@@ -36,7 +38,7 @@ class Network(NeuralNet):
 			],
 
 			# Layer parameters
-			input_shape=(None, IMAGE_SIZE, IMAGE_SIZE),		# Shape of the input (# imgs, rows, cols)
+			input_shape=(None, NN_IMAGE_SIZE, NN_IMAGE_SIZE),		# Shape of the input (# imgs, rows, cols)
 			hidden1_num_units=100,						# Number of units in each hidden layer
 			hidden2_num_units=100,						# Number of units in each hidden layer
 			hidden3_num_units=100,						# Number of units in each hidden layer

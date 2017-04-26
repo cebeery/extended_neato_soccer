@@ -20,43 +20,21 @@ import cv2
 import os
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
+from config import CONFIG
 
-# Constants
-IMAGE_SIZE = 480
-DOWNSAMPLE_SIZE = 32
-BALL_TAG = "ball"
-NO_BALL_TAG = "no_ball"
+# Load Constants
+ORIG_ORIG_IMAGE_SIZE = 		CONFIG.get("ORIG_ORIG_IMAGE_SIZE")
+NN_ORIG_IMAGE_SIZE = 			CONFIG.get("NNG_ORIG_IMAGE_SIZE")
+BALL_TAG = 								CONFIG.get("BALL_TAG")
+NO_BALL_TAG = 						CONFIG.get("NO_BALL_TAG")
+SKIPS_TO_RECORD_RATIO = 	CONFIG.get("SKIPS_TO_RECORD_RATIO")
 
-# Because most images are very similar to the last, this establishes a number
-# of frames to drop for every frame that is saved in order to reduce the memory
-# used on mostly repeated data of limited training utility.
-SKIPS_PER_CAPTURE = 14
 
+# Define Custom Constants
 CLASSIFICATION_CONTROLS = {
   BALL_TAG: pygame.K_RIGHT,
   NO_BALL_TAG: pygame.K_LEFT,
 }
-
-
-def filenumber(filename):
-  """
-  Utility for extracting the file-number from images prefixed
-  with a particular tag.
-
-  Input:
-    filename (string): the name of an image file, eg. "ball_000425.png"
-    tag (string): the prefix of the images to be counted, eg. "ball"
-
-  Output:
-    (int): the number associated with the image if it matches the tag.
-      -1 otherwise.
-
-  """
-
-  return int(filename[-7:-4])
-
-def filterByTag(filename, tag):
-  return filename[:len(tag)] == tag
 
 
 class BallTinder(object):
@@ -84,7 +62,7 @@ class BallTinder(object):
     # Use pygame to capture key input and show the images as they are processed
     pygame.init()
     pygame.display.set_caption("Ball Tinder")   # Set the window title
-    self.screen = pygame.display.set_mode((IMAGE_SIZE, IMAGE_SIZE))
+    self.screen = pygame.display.set_mode((ORIG_IMAGE_SIZE, ORIG_IMAGE_SIZE))
 
     self.bridge = CvBridge()
     self.savePath = savePath
@@ -93,8 +71,8 @@ class BallTinder(object):
     # Read the directory of current images and start numbering
     # for new images such that they will continue the sequence
     imgNames = [f for f in os.listdir(self.savePath) if os.path.isfile(os.path.join(savePath, f))]
-    self.noBallCount = max([filenumber(f) for f in imgNames if filterByTag(f, NO_BALL_TAG)] or [0])
-    self.ballCount = max([filenumber(f) for f in imgNames if filterByTag(f, NO_BALL_TAG)] or [0])
+    self.noBallCount = max([utils.filenumber(f) for f in imgNames if utils.hasTag(f, NO_BALL_TAG)] or [0])
+    self.ballCount = max([utils.filenumber(f) for f in imgNames if utils.hasTag(f, NO_BALL_TAG)] or [0])
 
     # Print instructions
     print "Welcome to ball tinder, a helper for rapidly classifying images as " \
@@ -129,7 +107,7 @@ class BallTinder(object):
     # Format the image appropriately
     rawImg = self.bridge.imgmsg_to_cv2(imageMsg, desired_encoding="passthrough")
     croppedImg = utils.crop(rawImg)
-    formattedImg = utils.formatImage(rawImg, imgSize=DOWNSAMPLE_SIZE)
+    formattedImg = utils.formatImage(rawImg, imgSize=NN_IMAGE_SIZE)
 
     # Display & publish current image
     self.pub.publish(self.bridge.cv2_to_imgmsg(formattedImg))
@@ -182,7 +160,7 @@ class BallTinder(object):
     pygame.draw.rect(
       self.screen,
       outlineColor,
-      pygame.Rect(0, 0, IMAGE_SIZE, IMAGE_SIZE),
+      pygame.Rect(0, 0, ORIG_IMAGE_SIZE, ORIG_IMAGE_SIZE),
       10   # Width of border. 0 means fill
     )
 
@@ -190,7 +168,7 @@ class BallTinder(object):
       self.skipCounter -= 1
       return
     else:
-      self.skipCounter = SKIPS_PER_CAPTURE
+      self.skipCounter = SKIPS_TO_RECORD_RATIO
 
     if isBall:
         self.ballCount += 1

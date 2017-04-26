@@ -4,8 +4,7 @@
 utils.py
 --------
 
-Contains utility functions for use in other parts of the
-neural network program.
+Contains utility functions for use in other script
 
 Example usage at bottom of file.
 
@@ -14,25 +13,25 @@ Example usage at bottom of file.
 import cv2
 import os
 import numpy as np
+from config import CONFIG
 
 # Constants
-IMAGE_SIZE = 32
+NN_IMAGE_SIZE = CONFIG.get("NN_IMAGE_SIZE")
 
-
-def formatImageFiles(srcPath, dstPath, imgSize=IMAGE_SIZE):
+def formatImageFiles(srcPath, dstPath, nnImgSize=NN_IMAGE_SIZE):
 	"""
 	Formats standard image files for use in neural net training.
 
 	Loads all images from the source path, gray-scales them,
 	crops them to a square aspect ratio, and down-samples them
-	to imgSize x imgSize. Saves the formatted images to the
+	to nnImgSize x nnImgSize. Saves the formatted images to the
 	destination path. Will overwrite if the source and
 	destination paths are the same.
 
 	Input:
 		srcPath (string): the source path for the images
 		dstPath (string): the destination path for the images
-		imgSize (int, optional): the dimension of the output
+		nnImgSize (int, optional): the dimension of the output
 
 	Output:
 		None
@@ -49,11 +48,24 @@ def formatImageFiles(srcPath, dstPath, imgSize=IMAGE_SIZE):
 
 		cv2.imwrite(
 			os.path.join(dstPath, imgName),
-			formatImage(raw, IMAGE_SIZE)
+			formatImage(raw, NN_IMAGE_SIZE)
 		)
 
 
 def crop(rawImg):
+	"""
+	Crops the given image to a square with edge length equal to the shorter
+	dimension of the passed image. The cropped image will be a centered subset
+	of the original.
+
+	Input:
+		rawImg (numpy.ndarray): the raw image
+
+	Output:
+		(numpy.ndarray): the cropped image, centered within the original
+
+	"""
+
 	# Crop image to be a square
 	height, width = rawImg.shape[:2]
 	boxSize = height if height < width else width
@@ -63,17 +75,18 @@ def crop(rawImg):
 		(width - boxSize) / 2  : (width + boxSize) / 2,
 	]
 
-def formatImage(rawImg, imgSize):
+
+def formatImage(rawImg, nnImgSize):
 	"""
 	Formats an image ndarray into the format needed for
 	training the neural network.
 
 	Namely, converts to a grayscaled, square-cropped,
-	imgSize x imgSize image.s
+	nnImgSize x nnImgSize image.s
 
 	Input:
 		rawImg	(numpy.ndarray): the raw image
-		imgSize (int, optional): the dimension of the output
+		nnImgSize (int, optional): the dimension of the output
 
 	Output:
 		(numpy.ndarray): the formatted image
@@ -91,8 +104,38 @@ def formatImage(rawImg, imgSize):
 	cropped = crop(grayImg)
 
 	# Down-sample the image
-	return cv2.resize(cropped, (imgSize, imgSize))
+	return cv2.resize(cropped, (nnImgSize, nnImgSize))
 
+
+def filenumber(filename):
+	"""
+	Utility for extracting the file-number from images.
+
+	Input:
+		filename (string): the name of an image file, eg. "ball_000425.png"
+
+	Output:
+		(int): the number associated with the image eg, in the above, "425"
+
+	"""
+
+	return int(filename[-7:-4])
+
+
+def hasTag(filename, tag):
+	"""
+	Utility to check if a certain filename is prefixed with a particular
+	tag.
+
+	Input:
+		filename (string): the name of a file, eg. "ball_000425.png"
+		tag (string): the prefix to test against the images, eg. "ball"
+
+	Output:
+	 (bool): True, if `filename` is preceded by `tag`. False otherwise.
+
+	"""
+	return filename[:len(tag)] == tag
 
 if __name__ == "__main__":
 
