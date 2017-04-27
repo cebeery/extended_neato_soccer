@@ -10,8 +10,9 @@ from neato_node.msg import Bump
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Twist, Vector3
 from NeuralNet.balldetector import BallDetector
-from VisionSuite.blobLocator import blobLocator
 from VisionSuite.colorFilteredCOM import colorFilteredCOM
+from VisionSuite.blobLocator import blobLocator
+from VisionSuite.houghCircles import houghCircles
 
 
 class NeatoSoccerPlayer(object):
@@ -110,20 +111,25 @@ class NeatoSoccerPlayer(object):
 
         else:
             #use on of vision suite methods
-            location,_ = colorFilteredCOM(self.currentImg)
-            #location,_ = blobLocator(self.currentImg)
+            location,_,error = colorFilteredCOM(self.currentImg)
+            #location,_,error = blobLocator(self.currentImg)
+            #location,_,error = houghCircles(self.currentImg)
 
-            #determining if ball is within alignment threshold
-            window_y, window_x,_ = self.currentImg.shape
-            diff = location[0] - (window_x/2)
-
-            if math.fabs(diff) < 20:
-                #move forward if within 20 pixels ahead
-                aligned = True
+            #if ball found
+            if error:
+                print("Atempting to locate ball again")
             else:
-                #setting proportional twist control
-                kp = .005           
-                self.cmd.angular.z = -diff*kp
+                #determining if ball is within alignment threshold
+                window_y, window_x,_ = self.currentImg.shape
+                diff = location[0] - (window_x/2)
+
+                if math.fabs(diff) < 20:
+                    #move forward if within 20 pixels ahead
+                    aligned = True
+                else:
+                    #setting proportional twist control
+                    kp = .005           
+                    self.cmd.angular.z = -diff*kp
 
         # change state if needed
         if aligned:
