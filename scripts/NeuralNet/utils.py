@@ -17,6 +17,8 @@ from config import CONFIG
 
 # Constants
 NN_IMAGE_SIZE = CONFIG.get("NN_IMAGE_SIZE")
+BALL_TAG = CONFIG.get("BALL_TAG")
+NO_BALL_TAG = CONFIG.get("NO_BALL_TAG")
 
 def formatImageFiles(srcPath, dstPath, nnImgSize=NN_IMAGE_SIZE):
 	"""
@@ -136,6 +138,22 @@ def hasTag(filename, tag):
 
 	"""
 	return filename[:len(tag)] == tag
+
+def listImgs(path=None):
+	if not path:
+		r = rospkg.RosPack()
+		path = os.path.join(
+			r.get_path('extended_neato_soccer'),
+			'images/training-imgs',
+		)
+
+	files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+
+	return {
+		BALL_TAG: [f for f in files if hasTag(f, BALL_TAG)],
+		NO_BALL_TAG: [f for f in files if hasTag(f, NO_BALL_TAG)]
+	}
+
 
 if __name__ == "__main__":
 

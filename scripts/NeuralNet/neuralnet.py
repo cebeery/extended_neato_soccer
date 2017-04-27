@@ -14,12 +14,21 @@ from lasagne import layers
 from lasagne.updates import nesterov_momentum
 from nolearn.lasagne import NeuralNet
 import os
+import rospkg
 import numpy as np
 import Image
 from config import CONFIG
 
 # Load Constants
 NN_IMAGE_SIZE = CONFIG.get("NN_IMAGE_SIZE")
+BALL_TAG = CONFIG.get("BALL_TAG")
+NO_BALL_TAG = CONFIG.get("NO_BALL_TAG")
+
+# Custom Constants
+LABELS = {
+	BALL_TAG: 1,
+	NO_BALL_TAG: 0,
+}
 
 class Network(NeuralNet):
 	def __init__(self):
@@ -57,7 +66,7 @@ class Network(NeuralNet):
 			verbose=1,											# Print output trace or not during training
 		)
 
-	def trainWith(self, imgsPath, presentPrefix):
+	def trainWith(self, labels=LABELS, imgsPath=):
 		# Get a list of all of the image paths from the imgPath directory
 		imgNames = [
 			e for e in os.listdir(imgsPath)
@@ -94,7 +103,13 @@ class Network(NeuralNet):
 		return super(Network, self).predict(img)
 
 if __name__ == "__main__":
-	imageFolder = '../../images/training-imgs'
+	r = rospkg.RosPack()
+	imgDir = os.path.join(
+		r.get_path('extended_neato_soccer'),
+		'images/training-imgs',
+	)
+
+	imageFolder = 
 
 	# Train the network with all of the images in the example folder,
 	# using their filenames ("no_boxes" or "boxes" as the tag)
