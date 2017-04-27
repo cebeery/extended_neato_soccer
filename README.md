@@ -22,7 +22,6 @@ Ball Tinder fills an important role because it is our pipeline for getting the h
 
 While developing Ball Tinder, we've also been trying modifications to the neural network architecture. While still using only about 20 training images, we found that decreasing the input image size from 128x128 to 32x32, and increasing the number of hidden layers from 1 to 3 skyrocketed our ability to classify images from virtually non existent to relatively high confidence values of about 85% for target images and 10% for non-target images. While these values hold little relevance to the what our final, trained model will produce, the modifications to the model do imply that we have found a much more fertile model configuration for our data. If this configuration is able to provide similar accuracies when trained on the ball images, we may not need to modify the model to a convolutional neural network.
 
-
 ### Visual Suite Development
 
 **4/18/17** - The intent of the visual suite is to provide multiple methods of locating and sizing a foam soccer ball with in a image taken by the Neato robot platform. In order to quantify and understand the accuracy of methods to be implemented in the visual suite, a simple script was created to both display the output of those methods against the input image as well as calculate the discrepancy between the methods' outputs and the actual location of the ball.
