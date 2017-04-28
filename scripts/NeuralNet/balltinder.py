@@ -145,7 +145,7 @@ class BallTinder(object):
 
 		# Get the highest number of the images with each tag in the save directory
 		# so that numbering can be initialized at that count
-		imgLists = utils.imgLists()
+		imgLists = utils.imgLists(savePath, labelNames=(BALL_TAG, NO_BALL_TAG))
 		self.counts = {
 			BALL_TAG: max(imgLists[BALL_TAG] or [0]),
 			NO_BALL_TAG: max(imgLists[NO_BALL_TAG] or [0]),
@@ -212,6 +212,7 @@ class BallTinder(object):
 		self.counts[tag] += 1
 
 
+# Example Code
 if __name__ == "__main__":
 	r = rospkg.RosPack()
 	path = os.path.join(

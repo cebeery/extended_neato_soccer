@@ -14,7 +14,6 @@ BallDetector class is the general client use-case.
 
 # Library imports
 import os
-import rospkg
 
 # Program imports
 from config import CONFIG
@@ -27,7 +26,11 @@ THRESHOLD = CONFIG.get("THRESHOLD")
 BALL_TAG = CONFIG.get("BALL_TAG")
 NO_BALL_TAG = CONFIG.get("NO_BALL_TAG")
 NN_IMAGE_SIZE = CONFIG.get("NN_IMAGE_SIZE")
+PROJECT_DIR = CONFIG.get("PROJECT_DIR")
 
+
+# Define Custom Constants
+NETWORK_FILEPATH = os.path.join(PROJECT_DIR, 'scripts/NeuralNet/save')
 
 class BallDetector(object):
 	"""
@@ -39,6 +42,7 @@ class BallDetector(object):
 	def __init__(
 		self,
 		networkFilename=NETWORK_FILENAME,
+		networkFilepath=NETWORK_FILEPATH,
 		threshold=THRESHOLD,
 		nnImageSize=NN_IMAGE_SIZE
 	):
@@ -85,13 +89,9 @@ if __name__ == "__main__":
 	}
 
 	# Construct path to training images
-	r = rospkg.RosPack()
-	imgDir = os.path.join(
-		r.get_path('extended_neato_soccer'),
-		'images/neural-net'
-	)
+	imgDir = os.path.join(PROJECT_DIR, 'images/neural-net')
 
 	# Train network
 	n = neuralnet.Network()
 	print "Average error in test set: {}".format(n.trainTest(labels, imgDir))
-	n.save(NETWORK_FILENAME)
+	n.save(NETWORK_FILENAME, NETWORK_FILEPATH)

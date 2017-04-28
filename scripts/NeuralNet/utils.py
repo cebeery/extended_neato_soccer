@@ -139,35 +139,73 @@ def hasTag(filename, tag):
 	"""
 	return filename[:len(tag)] == tag
 
-def imgLists(path=None, labels=None):
-	if not path:
-		r = rospkg.RosPack()
-		path = os.path.join(
-			r.get_path('extended_neato_soccer'),
-			'images/neural-net',
-		)
 
-	files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+def imgLists(filepath, labelNames=None):
+	"""
+	Returns all the files in the directory given by 'filepath' and organizes them
+	into a dictionary keyed by label if labelNames are provided.
+
+	Input:
+		filepath (string): the directory to search for files
+		labelNames (string list): a list of possible labelNames to apply,
+			eg. ("ball", "no_ball")
+
+	Output:
+		(str->(str list) dict): a mapping from each label to the list of files with
+			that label
+
+	"""
+
+	files = [
+		f for f in os.listdir(filepath)
+		if os.path.isfile(os.path.join(filepath, f))
+	]
 
 	return {
 		label: [f for f in files if hasTag(f, label)]
-		for label in labels
-	} if labels else files
+		for label in labelNames
+	} if labelNames else files
 
-def getLabel(image, labels):
-	for label in labels:
-		if label == image[:len(label)]:
-			return label
+
+def getLabel(filename, labelNames):
+	"""
+	Given a list of possible labelNames for a filename, match the filename to a label.
+
+	Input:
+		filename (string): the filename to match to a label, eg. "ball_000567.png"
+		labelNames (string list): a list of possible labelNames to apply,
+			eg. ("ball", "no_ball")
+
+	Output:
+		(string): the label that corresponds to the filename
+
+	"""
+
+	for labelName in labelNames:
+		if labelName == filename[:len(labelName)]:
+			return labelName
+
 
 def labelsFor(labels, filenames):
+	"""
+	Return a label list that matches the labels of the passed array of filenames.
+
+	Input:
+		labels (str->int dict): the desired labels for each tag, eg: {'ball': 1}
+		filenames (string list): the filenames to be labeled
+
+	Output:
+		(int list): the labels corresponding by index to the filenames
+
+	"""
+
 	return [
 		labels[getLabel(filename, labels.keys())]
 		for filename in filenames
 	]
 
 
-
-
+# Example Code
 if __name__ == "__main__":
 
 	# Convert all the files in the import directory to
