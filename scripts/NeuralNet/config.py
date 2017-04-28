@@ -33,6 +33,8 @@ class Config(object):
 
 				if section == "INTS":
 					self.data[option] = int(datum)
+				if section == "FLOATS":
+					self.data[option] = float(datum)
 				else:
 					self.data[option] = datum
 

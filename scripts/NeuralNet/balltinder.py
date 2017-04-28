@@ -31,8 +31,8 @@ SKIPS_TO_RECORD_RATIO = 	CONFIG.get("SKIPS_TO_RECORD_RATIO")
 
 # Define Custom Constants
 CLASSIFICATION_CONTROLS = {
-  pygame.K_RIGHT: BALL_TAG
-  pygame.K_LEFT: NO_BALL_TAG
+	BALL_TAG: pygame.K_RIGHT,
+	pygame.K_LEFT: NO_BALL_TAG,
 }
 
 FEEDBACK_COLORS = {
@@ -79,7 +79,7 @@ class UserInterface(object):
 		"""
 
 		pygame.event.pump()		# TODO: determine if this is needed
-		for key, tag in CLASSIFICATION_CONTROLS.items():
+		for tag, key in CLASSIFICATION_CONTROLS.items():
 			if pygame.key.get_pressed()[key]:
 				return tag
 
@@ -97,135 +97,125 @@ class UserInterface(object):
 		"""
 
 		# Show the image pygame display
-  	surfImg = pygame.surfarray.make_surface(img)
-    self.screen.blit(pygame.transform.rotate(surfImg, -90), (0, 0))
+		surfImg = pygame.surfarray.make_surface(img)
+		self.screen.blit(pygame.transform.rotate(surfImg, -90), (0, 0))
 
-    # Outline the window with a border of the passed color
-    if border:
-	    pygame.draw.rect(
-	      self.screen,
-	      border,
-	      pygame.Rect(0, 0, self.size, self.size),
-	      10   # Width of border. 0 means fill
-	    )
+		# Outline the window with a border of the passed color
+		if border:
+			pygame.draw.rect(
+				self.screen,
+				border,
+				pygame.Rect(0, 0, self.size, self.size),
+				10   # Width of border. 0 means fill
+			)
 
-	  # Repaint the display
-    pygame.display.flip()
+		# Repaint the display
+		pygame.display.flip()
 
 
 class BallTinder(object):
-  """
-  A utility program for rapidly classifying images from a video stream
-  as containing or not-containing a ball, then reformatting and saving
-  those images for use in neural network training.
-  """
+	"""
+	A utility program for rapidly classifying images from a video stream
+	as containing or not-containing a ball, then reformatting and saving
+	those images for use in neural network training.
+	"""
 
-  def __init__(self, savePath):
-  	"""
-  	Initializes the program.
+	def __init__(self, savePath):
+		"""
+		Initializes the program.
 
-  	Input:
-  		savepath (string): the filepath to which Ball Tinder should save images
+		Input:
+			savepath (string): the filepath to which Ball Tinder should save images
 
-  	Output:
-  		None
+		Output:
+			None
 
-  	"""
+		"""
 
-  	# ROS setup
-  	rospy.init_node('balltinder')
-    rospy.Subscriber('camera/image_raw', Image, self.tag)
-    self.pub = rospy.Publisher('camera/processed', Image, queue_size=10)
+		# ROS setup
+		rospy.init_node('balltinder')
+		rospy.Subscriber('camera/image_raw', Image, self.tag)
+		self.pub = rospy.Publisher('camera/processed', Image, queue_size=10)
 
-    # Variables Setup
-    self.ui = UserInterface()
-    self.bridge = CvBridge()
-    self.savePath = savePath
-    self.skipCounter = 0
+		# Variables Setup
+		self.ui = UserInterface()
+		self.bridge = CvBridge()
+		self.savePath = savePath
+		self.skipCounter = 0
 
-    # Get the highest number of the images with each tag in the save directory
-    # so that numbering can be initialized at that count
-    imgNames = [
-    	f for f in os.listdir(self.savePath)
-    	if os.path.isfile(os.path.join(savePath, f))
-    ]
+		# Get the highest number of the images with each tag in the save directory
+		# so that numbering can be initialized at that count
+		imgLists = utils.imgLists()
+		self.counts = {
+			BALL_TAG: max(imgLists[BALL_TAG] or [0]),
+			NO_BALL_TAG: max(imgLists[NO_BALL_TAG] or [0]),
+		}
 
-    self.counts = {
-    	NO_BALL_TAG: max([
-    		utils.filenumber(f) for f in imgNames
-    		if utils.hasTag(f, NO_BALL_TAG)
-    	] or [0]),
-    	BALL_TAG: max([
-    		utils.filenumber(f) for f in imgNames
-    		if utils.hasTag(f, NO_BALL_TAG)
-    	] or [0]),
-    }
+		# Print instructions
+		print "Welcome to ball tinder, a helper for rapidly classifying images as " \
+			"containing or not containing balls. In the window that is displayed, you " \
+			"will see an image from the neato's camera feed. For as long as the image " \
+			"contains a soccer ball, hold the right arrow key. For any times the image " \
+			"does not contain a soccer ball, hold the left arrow key. If the ball is " \
+			"partially on screen, the image contains a ball. If you are unsure, you can " \
+			"opt to not press either arrow key."
 
-    # Print instructions
-    print "Welcome to ball tinder, a helper for rapidly classifying images as " \
-      "containing or not containing balls. In the window that is displayed, you " \
-      "will see an image from the neato's camera feed. For as long as the image " \
-      "contains a soccer ball, hold the right arrow key. For any times the image " \
-      "does not contain a soccer ball, hold the left arrow key. If the ball is " \
-      "partially on screen, the image contains a ball. If you are unsure, you can " \
-      "opt to not press either arrow key."
+		r = rospy.Rate(10)
+		while not rospy.is_shutdown():
+			r.sleep()
 
-    r = rospy.Rate(10)
-    while not rospy.is_shutdown():
-      r.sleep()
+	def tag(self, imgMsg):
+		"""
+		Classifies an image message as containing or not containing a ball based on
+		the current UI inputs. Displays image to UI, formats the image, republishes
+		and saves the formatted image when appropriate.
 
-  def tag(self, imgMsg):
-    """
-    Classifies an image message as containing or not containing a ball based on
-    the current UI inputs. Displays image to UI, formats the image, republishes
-    and saves the formatted image when appropriate.
+		Input:
+			imgMsg (sensor_msgs.msg.Image): a camera image, gray-scale or color
 
-    Input:
-      imgMsg (sensor_msgs.msg.Image): a camera image, gray-scale or color
+		Output:
+			None
 
-    Output:
-      None
+		"""
 
-    """
+		tag = self.ui.getTag()
 
-    tag = self.ui.getTag()
+		# Format the image
+		rawImg = self.bridge.imgmsg_to_cv2(imageMsg, desired_encoding="passthrough")
+		formattedImg = utils.formatImage(rawImg, imgSize=NN_IMAGE_SIZE)
 
-    # Format the image
-    rawImg = self.bridge.imgmsg_to_cv2(imageMsg, desired_encoding="passthrough")
-    formattedImg = utils.formatImage(rawImg, imgSize=NN_IMAGE_SIZE)
+		# Publish and display the image
+		self.pub.publish(self.bridge.cv2_to_imgmsg(formattedImg))
+		self.ui.showImg(utils.crop(rawImg), FEEDBACK_COLORS[tag])
 
-    # Publish and display the image
-    self.pub.publish(self.bridge.cv2_to_imgmsg(formattedImg))
-    self.ui.showImg(utils.crop(rawImg), FEEDBACK_COLORS[tag])
+		# Save and tag every _th image where the _ is set by the config
+		self.skipCounter = (self.skipCounter + 1) % SKIPS_TO_RECORD_RATIO
+		if tag and not self.skipCounter:
+			self.save(formattedImg, tag)
 
-    # Save and tag every _th image where the _ is set by the config
-    self.skipCounter = (self.skipCounter + 1) % SKIPS_TO_RECORD_RATIO
-    if tag and not self.skipCounter:
-	    self.save(formattedImg, tag)
+	def saveImg(self, img, tag):
+		"""
+		Saves an image using the provided tag for naming. For example, provided the
+		tag "ball", this method might save the image as, eg. "ball_000245.png".
 
-  def saveImg(self, img, tag):
-  	"""
-  	Saves an image using the provided tag for naming. For example, provided the
-  	tag "ball", this method might save the image as, eg. "ball_000245.png".
+		Input:
+			img (numpy.ndarray): the image to save
+			tag (string): the tag with which to save the image
 
-  	Input:
-  		img (numpy.ndarray): the image to save
-  		tag (string): the tag with which to save the image
+		Output:
+			None
 
-  	Output:
-  		None
+		"""
 
-  	"""
-
-  	filename = "{}_{}.png".format(tag, str(self.counts[tag]).zfill(6))
-    cv2.imwrite(os.path.join(self.savePath, filename), img)
-  	self.counts[tag] += 1
+		filename = "{}_{}.png".format(tag, str(self.counts[tag]).zfill(6))
+		cv2.imwrite(os.path.join(self.savePath, filename), img)
+		self.counts[tag] += 1
 
 
 if __name__ == "__main__":
-  r = rospkg.RosPack()
-  path = os.path.join(
-    r.get_path('extended_neato_soccer'),
-    'images/training-imgs'
-  )
-  bt = BallTinder(path)
+	r = rospkg.RosPack()
+	path = os.path.join(
+		r.get_path('extended_neato_soccer'),
+		'images/neural-net'
+	)
+	bt = BallTinder(path)

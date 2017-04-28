@@ -139,20 +139,33 @@ def hasTag(filename, tag):
 	"""
 	return filename[:len(tag)] == tag
 
-def listImgs(path=None):
+def imgLists(path=None, labels=None):
 	if not path:
 		r = rospkg.RosPack()
 		path = os.path.join(
 			r.get_path('extended_neato_soccer'),
-			'images/training-imgs',
+			'images/neural-net',
 		)
 
 	files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
 
 	return {
-		BALL_TAG: [f for f in files if hasTag(f, BALL_TAG)],
-		NO_BALL_TAG: [f for f in files if hasTag(f, NO_BALL_TAG)]
-	}
+		label: [f for f in files if hasTag(f, label)]
+		for label in labels
+	} if labels else files
+
+def getLabel(image, labels):
+	for label in labels:
+		if label == image[:len(label)]:
+			return label
+
+def labelsFor(labels, filenames):
+	return [
+		labels[getLabel(filename, labels.keys())]
+		for filename in filenames
+	]
+
+
 
 
 if __name__ == "__main__":
@@ -161,6 +174,6 @@ if __name__ == "__main__":
 	# the format required by the neural network and store
 	# the results in the example directory
 	formatImageFiles(
-		'../../images/training-imgs/import',
-		'../../images/training-imgs/example',
+		'../../images/neural-net/import',
+		'../../images/neural-net/example',
 	)
