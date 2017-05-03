@@ -17,6 +17,8 @@ from config import CONFIG
 
 # Constants
 NN_IMAGE_SIZE = CONFIG.get("NN_IMAGE_SIZE")
+BALL_TAG = CONFIG.get("BALL_TAG")
+NO_BALL_TAG = CONFIG.get("NO_BALL_TAG")
 
 def formatImageFiles(srcPath, dstPath, nnImgSize=NN_IMAGE_SIZE):
 	"""
@@ -137,12 +139,79 @@ def hasTag(filename, tag):
 	"""
 	return filename[:len(tag)] == tag
 
+
+def imgLists(filepath, labelNames=None):
+	"""
+	Returns all the files in the directory given by 'filepath' and organizes them
+	into a dictionary keyed by label if labelNames are provided.
+
+	Input:
+		filepath (string): the directory to search for files
+		labelNames (string list): a list of possible labelNames to apply,
+			eg. ("ball", "no_ball")
+
+	Output:
+		(str->(str list) dict): a mapping from each label to the list of files with
+			that label
+
+	"""
+
+	files = [
+		f for f in os.listdir(filepath)
+		if os.path.isfile(os.path.join(filepath, f))
+	]
+
+	return {
+		label: [f for f in files if hasTag(f, label)]
+		for label in labelNames
+	} if labelNames else files
+
+
+def getLabel(filename, labelNames):
+	"""
+	Given a list of possible labelNames for a filename, match the filename to a label.
+
+	Input:
+		filename (string): the filename to match to a label, eg. "ball_000567.png"
+		labelNames (string list): a list of possible labelNames to apply,
+			eg. ("ball", "no_ball")
+
+	Output:
+		(string): the label that corresponds to the filename
+
+	"""
+
+	for labelName in labelNames:
+		if labelName == filename[:len(labelName)]:
+			return labelName
+
+
+def labelsFor(labels, filenames):
+	"""
+	Return a label list that matches the labels of the passed array of filenames.
+
+	Input:
+		labels (str->int dict): the desired labels for each tag, eg: {'ball': 1}
+		filenames (string list): the filenames to be labeled
+
+	Output:
+		(int list): the labels corresponding by index to the filenames
+
+	"""
+
+	return [
+		labels[getLabel(filename, labels.keys())]
+		for filename in filenames
+	]
+
+
+# Example Code
 if __name__ == "__main__":
 
 	# Convert all the files in the import directory to
 	# the format required by the neural network and store
 	# the results in the example directory
 	formatImageFiles(
-		'../../images/training-imgs/import',
-		'../../images/training-imgs/example',
+		'../../images/neural-net/import',
+		'../../images/neural-net/example',
 	)

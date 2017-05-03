@@ -2,3 +2,5 @@
 *.sublime-workspace
 *.py[cod]
 *~
+images/neural-net/*.png
+bags/*

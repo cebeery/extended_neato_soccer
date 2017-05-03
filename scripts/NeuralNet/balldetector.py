@@ -7,56 +7,91 @@ balldetector.py
 An interface to the neural network that allows the classification of images as
 containing or not containing a ball.
 
-See example usage at bottom of file.
+Running this file will retrain the underlying network. Simply loading the
+BallDetector class is the general client use-case.
 
 """
 
-from neuralnet import Network
+# Library imports
 import os
 
+# Program imports
+from config import CONFIG
+import neuralnet
+
+
+# Load Constants
+NETWORK_FILENAME = CONFIG.get("NETWORK_FILENAME")
+THRESHOLD = CONFIG.get("THRESHOLD")
+BALL_TAG = CONFIG.get("BALL_TAG")
+NO_BALL_TAG = CONFIG.get("NO_BALL_TAG")
+NN_IMAGE_SIZE = CONFIG.get("NN_IMAGE_SIZE")
+PROJECT_DIR = CONFIG.get("PROJECT_DIR")
+
+
+# Define Custom Constants
+NETWORK_FILEPATH = os.path.join(PROJECT_DIR, 'scripts/NeuralNet/save')
 
 class BallDetector(object):
-	def __init__(self):
-		# TODO: Load NN weights & configure
-		pass
+	"""
+	A convenient adapter interface for a particular pre-trained neural-net.
+	Pre-configured to load the network and return a simple boolean response
+	when presented with an image piped in from ROS.
+	"""
+
+	def __init__(
+		self,
+		networkFilename=NETWORK_FILENAME,
+		networkFilepath=NETWORK_FILEPATH,
+		threshold=THRESHOLD,
+		nnImageSize=NN_IMAGE_SIZE
+	):
+		"""
+		Initializes the ball detector class.
+
+		Input:
+			networkFilename (string): the filename of the underlying network to load.
+			threshold (float): the threshold of confidence above which an image is
+				considered to contain a ball.
+			nnImageSize (int): the expected pixel-size of the downsampled image.
+
+		Outputs:
+			None
+
+		"""
+
+		self.network = neuralnet.load(networkFilename)
+		self.threshold = threshold
+		self.nnImageSize = nnImageSize
 
 	def classify(self, img):
-		return True
+		"""
+		Classifies a passed image, as bridged from ROS to OpenCV as either True,
+		if it contains a ball, or False otherwise.
 
+		Input:
+			img (numpy.ndarray): the image to classify
+
+		Output:
+			(boolean): True, if it contains a ball. False otherwise.
+
+		"""
+		formattedImg = utils.format(img, self.nnImageSize)
+		return self.network.predict([formattedImg])[0] > self.threshold
+
+
+# Train neural net
 if __name__ == "__main__":
-	# bd = BallDetector()				# Create Ball Detector class
-	# print bd.classify("foo")	# Classify an image as ball-containing or not
+	# Set up labels for classifying data
+	labels = {
+		BALL_TAG: 1,
+		NO_BALL_TAG: 0,
+	}
 
-	# TODO: Cleanup this code into something reusable
-	imageFolder = '../../images/training-imgs'
+	# Construct path to training images
+	imgDir = os.path.join(PROJECT_DIR, 'images/neural-net')
 
-	# Train the network with all of the images in the example folder,
-	# using their filenames ("no_boxes" or "boxes" as the tag)
-	n = Network()
-	n.trainWith(os.path.join(imageFolder), presentPrefix="ball")
-
-	# NOTE: the predictions below are NOT good form - we test on the images
-	# that we trained on. This is an example, not suitable for production
-
-	testFP = os.path.join(imageFolder, "test")
-	# Predict how likely it is that each of the box images contains a box.
-	# Ideally 1 for all of the images in this category.
-	posImgs = [
-		os.path.join(testFP, e) for e in os.listdir(testFP)
-		if os.path.isfile(os.path.join(testFP, e)) and e[:2] == 'ba'
-	]
-
-	print "Predictions for ball images:\n{}".format(
-		n.predict(posImgs)
-	)
-
-	negImgs = [
-		os.path.join(testFP, e) for e in os.listdir(testFP)
-		if os.path.isfile(os.path.join(testFP, e)) and e[:2] == 'no'
-	]
-
-	# Predict how likely it is that each of the (first 10) non-box images
-	# contains a box. Ideally 0 for all of the images in this category.
-	print "Predictions for non-ball images:\n{}".format(
-		n.predict(negImgs)
-	)
+	# Train network
+	n = neuralnet.Network()
+	print "Average error in test set: {}".format(n.trainTest(labels, imgDir))
+	n.save(NETWORK_FILENAME, NETWORK_FILEPATH)
