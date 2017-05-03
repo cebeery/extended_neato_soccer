@@ -29,7 +29,7 @@ def blobLocator(img,
 
     # Filter image
     #grey = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)  
-    #hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     #blur = cv2.blur(hsv[:,:,0],(71,71))
     #equ = cv2.equalizeHist(blur)
     #mask = cv2.inRange(equ, 220, 255) 
@@ -37,7 +37,8 @@ def blobLocator(img,
     #grey= cv2.bitwise_and(hsv[:,:,2],hsv[:,:,2],mask = mask) 
     #grey = cv2.bilateralFilter(grey,11,5,5)
 
-    grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  
+    #grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  
+    grey = hsv[:,:,0]
     grey = cv2.medianBlur(grey,11)
 
     # Create SimpleBlobDetector
@@ -66,8 +67,8 @@ def blobLocator(img,
     #params.filterByInertia = True
     #params.minInertiaRatio = 0.01
 
-    #params.filterByColor = True
-    #params.blobColor = 255
+    params.filterByColor = True
+    params.blobColor = 255
 
     sbd = cv2.SimpleBlobDetector(params)
 
@@ -97,7 +98,7 @@ if __name__ == "__main__":
     cur_path = os.path.dirname(os.path.realpath(__file__))  #path to script
     rel_path = "../../images/"                              #relative path to img folder
     dir_path = os.path.join(cur_path,rel_path)              #full path to img folder
-    img_name = "test_circles.jpg"                         #img name
+    img_name = "00_neatoSoccer.png"                         #img name
     img_path = os.path.join(dir_path,img_name)              #img path
     img = cv2.imread(img_path)                              #load from path
 
