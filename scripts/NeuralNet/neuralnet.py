@@ -49,9 +49,6 @@ def load(filename="neural-net.pkl", filepath="save"):
 
 	"""
 	n = Network()
-	print "\n\n"
-	print os.path.join(filepath, filename)
-	print "\n\n"
 	n.load_params_from(os.path.join(filepath, filename))
 	return n
 

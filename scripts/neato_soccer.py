@@ -33,6 +33,7 @@ class NeatoSoccerPlayer(object):
 
         # Setup Neural Net Class Instance
         self.nn = BallDetector()
+        print "ready to rumble"
 
         # Setup raw camera visualization
         self.img = None                 #the latest image from the camera
@@ -41,6 +42,7 @@ class NeatoSoccerPlayer(object):
         cv2.namedWindow('video_window') #create window for live video stream
 
         # Setup ROS Node
+        print "Trying to connect to Neato"
         rospy.init_node('neato_soccer')
         self.rate = rospy.Rate(10)
         rospy.Subscriber(image_topic, Image, self.processImage)
@@ -81,7 +83,8 @@ class NeatoSoccerPlayer(object):
             self.transition = False
         else:
             print "Looking for ball"
-            ball = self.nn.classify(self.currentImg)
+            #ball = self.nn.classify(self.currentImg)
+            ball = self.nn.classify(self.img)
 
         # change state if needed
         if ball:
@@ -90,7 +93,9 @@ class NeatoSoccerPlayer(object):
             self.transition = True
         elif ball is not None:
             print "Where ball? Want ball!"
-            rospy.signal_shutdown("No Soccerball was detected in view")     
+            self.cmd.linear.x = 0 
+            self.cmd.angular.z = 0.5
+            #rospy.signal_shutdown("No Soccerball was detected in view")     
 
     def alignNeato(self):
         """
@@ -111,13 +116,14 @@ class NeatoSoccerPlayer(object):
 
         else:
             #use on of vision suite methods
-            location,_,error = colorFilteredCOM(self.currentImg)
+            location,_,error = colorFilteredCOM(self.img)
             #location,_,error = blobLocator(self.currentImg)
             #location,_,error = houghCircles(self.currentImg)
 
             #if ball found
             if error:
-                print("Atempting to locate ball again")
+                print("Attempting to locate ball again")
+                aligned = True
             else:
                 #determining if ball is within alignment threshold
                 window_y, window_x,_ = self.currentImg.shape
@@ -125,16 +131,19 @@ class NeatoSoccerPlayer(object):
 
                 if math.fabs(diff) < 20:
                     #move forward if within 20 pixels ahead
-                    aligned = True
+                    #aligned = True
+                    self.cmd.linear.x = 1 
+                    self.cmd.angular.z = 0
                 else:
                     #setting proportional twist control
-                    kp = .005           
+                    kp = .001  
+                    self.cmd.linear.x = math.fabs(diff*kp)                           
                     self.cmd.angular.z = -diff*kp
 
         # change state if needed
         if aligned:
             print "Neato aligned with ball"
-            self.state = self.kickBall
+            self.state = self.determineBall
             self.transition = True
 
     def kickBall(self):
@@ -149,10 +158,11 @@ class NeatoSoccerPlayer(object):
             self.cmd = Twist()
             self.transition = False
         else:
-            self.cmd.linear.x = 0.3 
-            self.transition = True
+            self.cmd.linear.x = 1 
+            #self.transition = True
             #possibly temp -> stop on circle too big instead of rechecking/remove cmd 0 in transitions
-            self.state=self.determineBall
+            #self.state=self.determineBall
+            
 
     def run(self):
         """ The main run loop"""

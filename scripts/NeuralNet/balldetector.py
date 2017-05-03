@@ -18,6 +18,7 @@ import os
 # Program imports
 from config import CONFIG
 import neuralnet
+import utils
 
 
 # Load Constants
@@ -76,8 +77,12 @@ class BallDetector(object):
 			(boolean): True, if it contains a ball. False otherwise.
 
 		"""
-		formattedImg = utils.format(img, self.nnImageSize)
-		return self.network.predict([formattedImg])[0] > self.threshold
+		formattedImg = utils.formatImage(img, self.nnImageSize)
+		formattedImg = formattedImg.reshape([1, 32, 32])
+		prediction = self.network.predict(formattedImg)[0]
+		print prediction
+		return prediction > self.threshold
+
 
 
 # Train neural net
