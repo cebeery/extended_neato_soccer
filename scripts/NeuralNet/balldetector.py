@@ -60,7 +60,7 @@ class BallDetector(object):
 
 		"""
 
-		self.network = neuralnet.load(networkFilename)
+		self.network = neuralnet.load(networkFilename, networkFilepath)
 		self.threshold = threshold
 		self.nnImageSize = nnImageSize
 

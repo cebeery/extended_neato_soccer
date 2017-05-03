@@ -48,10 +48,12 @@ def load(filename="neural-net.pkl", filepath="save"):
 		(neuralnet.Network): a neural network
 
 	"""
-	with open(os.path.join(filepath, filename), 'r') as f:
-		network = pickle.load(f)
-
-	return network
+	n = Network()
+	print "\n\n"
+	print os.path.join(filepath, filename)
+	print "\n\n"
+	n.load_params_from(os.path.join(filepath, filename))
+	return n
 
 
 class Network(NeuralNet):
@@ -230,9 +232,7 @@ class Network(NeuralNet):
 			None.
 
 		"""
-
-		with open(os.path.join(filepath, filename), 'w+') as f:
-			pickle.dump(self, f)
+		self.save_params_to(os.path.join(filepath, filename))
 
 
 # Example Code

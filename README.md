@@ -1,6 +1,16 @@
 # CompRobo Final Project: Neato Soccer, Extended Edition
 For this project, our ostensible goal is to program a robot (a neato vacuum cleaner) to recognize a soccer ball visually, approach it, and kick it into a goal. The real purpose is to develop our own learning goals around computer vision and object recognition via a neural network. The project is largely split along those lines.
 
+## Setup
+```
+git clone https://github.com/cebeery/extended_neato_soccer
+cd extended_neato_soccer
+sudo pip install -r requirements.txt
+```
+
+## Usage
+`rosrun extended_neato_soccer neato_soccer.py`
+
 ## The Story So Far
 As a part of documenting our learning during the development project, what follows are a few incremental blog posts about the paths we took as we developed the computer vision and neural network parts of the software.
 
