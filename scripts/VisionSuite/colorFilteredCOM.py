@@ -23,7 +23,7 @@ def colorFilteredCOM(img,
 
     #Assume nothing is wrong
     error = False 
-
+    
     # Manually adjust thresholding
     if setThresholds:
         cf = ColorFilter(img,bounds)
@@ -53,6 +53,7 @@ def colorFilteredCOM(img,
         
     # Pass back describtor
     return (x,y), radius, error
+
 
 if __name__ == "__main__":
     # Load Image

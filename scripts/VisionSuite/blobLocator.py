@@ -51,6 +51,7 @@ def blobLocator(img,
     # Pass back describtor    
     return (x,y), radius, error
 
+
 if __name__ == "__main__":
     # Load Image
     cur_path = os.path.dirname(os.path.realpath(__file__))  #path to script
