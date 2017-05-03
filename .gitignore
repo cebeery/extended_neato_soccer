@@ -2,4 +2,4 @@
 *.sublime-workspace
 *.py[cod]
 *~
-images/neural-net/*
+images/neural-net/*.png
