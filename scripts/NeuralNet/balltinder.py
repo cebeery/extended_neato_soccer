@@ -22,8 +22,8 @@ from cv_bridge import CvBridge
 from config import CONFIG
 
 # Load Constants
-ORIG_ORIG_IMAGE_SIZE = 		CONFIG.get("ORIG_ORIG_IMAGE_SIZE")
-NN_ORIG_IMAGE_SIZE = 			CONFIG.get("NNG_ORIG_IMAGE_SIZE")
+ORIG_IMAGE_SIZE = 				CONFIG.get("ORIG_IMAGE_SIZE")
+NN_IMAGE_SIZE = 					CONFIG.get("NN_IMAGE_SIZE")
 BALL_TAG = 								CONFIG.get("BALL_TAG")
 NO_BALL_TAG = 						CONFIG.get("NO_BALL_TAG")
 SKIPS_TO_RECORD_RATIO = 	CONFIG.get("SKIPS_TO_RECORD_RATIO")
@@ -32,7 +32,7 @@ SKIPS_TO_RECORD_RATIO = 	CONFIG.get("SKIPS_TO_RECORD_RATIO")
 # Define Custom Constants
 CLASSIFICATION_CONTROLS = {
 	BALL_TAG: pygame.K_RIGHT,
-	pygame.K_LEFT: NO_BALL_TAG,
+	 NO_BALL_TAG: pygame.K_LEFT,
 }
 
 FEEDBACK_COLORS = {
@@ -62,7 +62,7 @@ class UserInterface(object):
 
 		pygame.init()
 		pygame.display.set_caption(title)
-		self.screen = pygame.display.set_mode(size)
+		self.screen = pygame.display.set_mode((size, size))
 		self.size = size
 
 	def getTag(self):
@@ -78,7 +78,7 @@ class UserInterface(object):
 
 		"""
 
-		pygame.event.pump()		# TODO: determine if this is needed
+		pygame.event.pump()
 		for tag, key in CLASSIFICATION_CONTROLS.items():
 			if pygame.key.get_pressed()[key]:
 				return tag
@@ -132,13 +132,8 @@ class BallTinder(object):
 
 		"""
 
-		# ROS setup
-		rospy.init_node('balltinder')
-		rospy.Subscriber('camera/image_raw', Image, self.tag)
-		self.pub = rospy.Publisher('camera/processed', Image, queue_size=10)
-
 		# Variables Setup
-		self.ui = UserInterface()
+		self.ui = UserInterface(ORIG_IMAGE_SIZE)
 		self.bridge = CvBridge()
 		self.savePath = savePath
 		self.skipCounter = 0
@@ -147,9 +142,14 @@ class BallTinder(object):
 		# so that numbering can be initialized at that count
 		imgLists = utils.imgLists(savePath, labelNames=(BALL_TAG, NO_BALL_TAG))
 		self.counts = {
-			BALL_TAG: max(imgLists[BALL_TAG] or [0]),
-			NO_BALL_TAG: max(imgLists[NO_BALL_TAG] or [0]),
+			BALL_TAG: max([utils.filenumber(el) for el in imgLists[BALL_TAG]] or [0]),
+			NO_BALL_TAG: max([utils.filenumber(el) for el in imgLists[NO_BALL_TAG]] or [0]),
 		}
+
+		# Start ROS - done last so that images are not received before UI is set up
+		rospy.init_node('balltinder')
+		self.pub = rospy.Publisher('camera/processed', Image, queue_size=10)
+		rospy.Subscriber('camera/image_raw', Image, self.tag)
 
 		# Print instructions
 		print "Welcome to ball tinder, a helper for rapidly classifying images as " \
@@ -181,8 +181,8 @@ class BallTinder(object):
 		tag = self.ui.getTag()
 
 		# Format the image
-		rawImg = self.bridge.imgmsg_to_cv2(imageMsg, desired_encoding="passthrough")
-		formattedImg = utils.formatImage(rawImg, imgSize=NN_IMAGE_SIZE)
+		rawImg = self.bridge.imgmsg_to_cv2(imgMsg, desired_encoding="passthrough")
+		formattedImg = utils.formatImage(rawImg, NN_IMAGE_SIZE)
 
 		# Publish and display the image
 		self.pub.publish(self.bridge.cv2_to_imgmsg(formattedImg))
@@ -191,7 +191,7 @@ class BallTinder(object):
 		# Save and tag every _th image where the _ is set by the config
 		self.skipCounter = (self.skipCounter + 1) % SKIPS_TO_RECORD_RATIO
 		if tag and not self.skipCounter:
-			self.save(formattedImg, tag)
+			self.saveImg(formattedImg, tag)
 
 	def saveImg(self, img, tag):
 		"""

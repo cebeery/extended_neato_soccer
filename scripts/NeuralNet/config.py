@@ -59,8 +59,9 @@ class Config(object):
 					self.data[option] = int(datum)
 				if section == "FLOATS":
 					self.data[option] = float(datum)
-				else:
+				elif section == "STRINGS":
 					self.data[option] = datum
+
 
 	def get(self, key):
 		"""
