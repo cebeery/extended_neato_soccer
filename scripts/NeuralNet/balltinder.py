@@ -27,6 +27,7 @@ NN_IMAGE_SIZE = 					CONFIG.get("NN_IMAGE_SIZE")
 BALL_TAG = 								CONFIG.get("BALL_TAG")
 NO_BALL_TAG = 						CONFIG.get("NO_BALL_TAG")
 SKIPS_TO_RECORD_RATIO = 	CONFIG.get("SKIPS_TO_RECORD_RATIO")
+COLOR = 									CONFIG.get("COLOR")
 
 
 # Define Custom Constants
@@ -182,7 +183,7 @@ class BallTinder(object):
 
 		# Format the image
 		rawImg = self.bridge.imgmsg_to_cv2(imgMsg, desired_encoding="passthrough")
-		formattedImg = utils.formatImage(rawImg, NN_IMAGE_SIZE)
+		formattedImg = utils.formatImage(rawImg, NN_IMAGE_SIZE, color=COLOR)
 
 		# Publish and display the image
 		self.pub.publish(self.bridge.cv2_to_imgmsg(formattedImg))
@@ -217,6 +218,6 @@ if __name__ == "__main__":
 	r = rospkg.RosPack()
 	path = os.path.join(
 		r.get_path('extended_neato_soccer'),
-		'images/neural-net'
+		'images/neural-net/{}'.format(NN_IMAGE_SIZE)
 	)
 	bt = BallTinder(path)

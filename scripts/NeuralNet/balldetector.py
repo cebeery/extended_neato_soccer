@@ -28,6 +28,7 @@ BALL_TAG = CONFIG.get("BALL_TAG")
 NO_BALL_TAG = CONFIG.get("NO_BALL_TAG")
 NN_IMAGE_SIZE = CONFIG.get("NN_IMAGE_SIZE")
 PROJECT_DIR = CONFIG.get("PROJECT_DIR")
+COLOR = CONFIG.get("COLOR")
 
 
 # Define Custom Constants
@@ -77,8 +78,8 @@ class BallDetector(object):
 			(boolean): True, if it contains a ball. False otherwise.
 
 		"""
-		formattedImg = utils.formatImage(img, self.nnImageSize)
-		formattedImg = formattedImg.reshape([1, 32, 32])
+		formattedImg = utils.formatImage(img, self.nnImageSize, color=COLOR)
+		formattedImg = formattedImg.reshape([3, 64, 64])
 		prediction = self.network.predict(formattedImg)[0]
 		print prediction
 		return prediction > self.threshold
@@ -93,9 +94,9 @@ if __name__ == "__main__":
 	}
 
 	# Construct path to training images
-	imgDir = os.path.join(PROJECT_DIR, 'images/neural-net')
+	imgDir = os.path.join(PROJECT_DIR, 'images/neural-net/{}'.format(NN_IMAGE_SIZE))
 
 	# Train network
 	n = neuralnet.Network()
 	print "Average error in test set: {}".format(n.trainTest(labels, imgDir))
-	n.save('one-layer-conv-x500-augmented.pkl', NETWORK_FILEPATH)
+	n.save(NETWORK_FILENAME, NETWORK_FILEPATH)
