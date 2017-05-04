@@ -27,7 +27,7 @@ class NeatoSoccerPlayer(object):
         """ Initialize the ball tracker """
 
         # Setup states
-        #states = determineBall, alignNeato, kickBall]
+        #states = determineBall, alignNeato
         self.state = self.determineBall
         self.transition = True
 
@@ -37,7 +37,6 @@ class NeatoSoccerPlayer(object):
 
         # Setup raw camera visualization
         self.img = None                 #the latest image from the camera
-        self.currentImg = None          #curretn image being processed
         self.bridge = CvBridge()        #used to convert ROS messages to OpenCV
         cv2.namedWindow('video_window') #create window for live video stream
 
@@ -66,10 +65,9 @@ class NeatoSoccerPlayer(object):
     def determineBall(self):
         """
         Determines if there is a soccer ball in the view currently being processed
-        using a neural net
-        At Start    > stop neato motion, set currentImg to img
+        using a neural net; initiates rotation to look for ball, if needed
+        At Start    > ensure no neato motion
         Transition 1: condition(ball found) > alignNeato state
-        Transition 2: condition(no ball) > end node
         """
 
         # init change state flag
@@ -79,11 +77,9 @@ class NeatoSoccerPlayer(object):
         if self.transition:
             print "Transitioning to determineBall state"
             self.cmd = Twist()
-            self.currentImg = self.img
             self.transition = False
         else:
             print "Looking for ball"
-            #ball = self.nn.classify(self.currentImg)
             ball = self.nn.classify(self.img)
 
         # change state if needed
@@ -92,77 +88,56 @@ class NeatoSoccerPlayer(object):
             self.state = self.alignNeato
             self.transition = True
         elif ball is not None:
-            print "Where ball? Want ball!"
-            self.cmd.linear.x = 0 
+            print "Where ball? Want ball!" 
             self.cmd.angular.z = 0.5
-            #rospy.signal_shutdown("No Soccerball was detected in view")     
 
     def alignNeato(self):
         """
-        Determines the location of the ball with in the image being processed
-        and rotates neato to line up with ball 
-        At Start    > stop neato motion
-        Transition 1: condition(ball centered) > kickBall state
+        Determines the location of the ball within the current image using one of multiple
+        image processing options from the Vision Suite. If ball is in center of frame, 
+        neato drives forward. If ball is not within center threshold, neato rotates at a
+        speed proportional to offset line up with ball and drives forward faster when aligned  
+        At Start    > ensure no neato motion
+        Transition 1: condition(no ball) > determineBall state
         """
 
         # init change state flag
-        aligned = False
+        error = False
 
         # perform state funtionally
         if self.transition:
             print "Transitioning to alignNeato state"
             self.cmd = Twist()
             self.transition = False
-
         else:
             #use on of vision suite methods
             location,_,error = colorFilteredCOM(self.img)
             #location,_,error = blobLocator(self.currentImg)
             #location,_,error = houghCircles(self.currentImg)
 
-            #if ball found
-            if error:
-                print("Attempting to locate ball again")
-                aligned = True
-            else:
+            #Align with and kick ball
+            if not error:
                 #determining if ball is within alignment threshold
                 window_y, window_x,_ = self.currentImg.shape
                 diff = location[0] - (window_x/2)
 
                 if math.fabs(diff) < 20:
-                    #move forward if within 20 pixels ahead
-                    #aligned = True
+                    #move forward if within 20 pixels of center line
                     self.cmd.linear.x = 1 
                     self.cmd.angular.z = 0
                 else:
-                    #setting proportional twist control
-                    kp = .001  
-                    self.cmd.linear.x = math.fabs(diff*kp)                           
-                    self.cmd.angular.z = -diff*kp
+                    #max diff is half window size (~320)
+                    kp_ang = .001  
+                    kp_ang = -80
+                    #setting twist control
+                    self.cmd.linear.x = math.exp(diff**2/kp_lin**2)                         
+                    self.cmd.angular.z = -diff*kp_ang
 
         # change state if needed
-        if aligned:
-            print "Neato aligned with ball"
+        if error:
+            print("The ball is a lie")
             self.state = self.determineBall
-            self.transition = True
-
-    def kickBall(self):
-        """
-        Drive forward to kick ball until node ended
-        At Start    > stop neato motion
-        """
-
-        # perform state funtionally
-        if self.transition:
-            print "Transitioning to kickBall state"
-            self.cmd = Twist()
-            self.transition = False
-        else:
-            self.cmd.linear.x = 1 
-            #self.transition = True
-            #possibly temp -> stop on circle too big instead of rechecking/remove cmd 0 in transitions
-            #self.state=self.determineBall
-            
+            self.transition = True           
 
     def run(self):
         """ The main run loop"""
