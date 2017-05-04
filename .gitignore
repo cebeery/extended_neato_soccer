@@ -3,4 +3,5 @@
 *.py[cod]
 *~
 images/neural-net/*.png
+images/neural-net/extra/*.png
 bags/*

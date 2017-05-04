@@ -78,7 +78,7 @@ def crop(rawImg):
 	]
 
 
-def formatImage(rawImg, nnImgSize):
+def formatImage(rawImg, nnImgSize, arrayReformat=True):
 	"""
 	Formats an image ndarray into the format needed for
 	training the neural network.

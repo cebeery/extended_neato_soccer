@@ -84,40 +84,18 @@ class BallDetector(object):
 		return prediction > self.threshold
 
 
-
 # Train neural net
 if __name__ == "__main__":
-	# # Set up labels for classifying data
-	# labels = {
-	# 	BALL_TAG: 1,
-	# 	NO_BALL_TAG: 0,
-	# }
+	# Set up labels for classifying data
+	labels = {
+		BALL_TAG: True,
+		NO_BALL_TAG: False,
+	}
 
-	# # Construct path to training images
-	# imgDir = os.path.join(PROJECT_DIR, 'images/neural-net')
+	# Construct path to training images
+	imgDir = os.path.join(PROJECT_DIR, 'images/neural-net')
 
-	# # Train network
-	# n = neuralnet.Network()
-	# print "Average error in test set: {}".format(n.trainTest(labels, imgDir))
-	# n.save(NETWORK_FILENAME, NETWORK_FILEPATH)
-
-
-
-	from cv_bridge import CvBridge
-	import cv2
-	from sensor_msgs.msg import Image
-	import rospy
-
-	bd = BallDetector()
-	bridge = CvBridge()        #used to convert ROS messages to OpenCV
-	cv2.namedWindow('video_window') #create window for live video stream
-
-	def isBall(imgMsg):
-		print bd.classify(bridge.imgmsg_to_cv2(imgMsg, desired_encoding="bgr8"))
-
-	# Setup ROS Node
-	rospy.init_node('ball_detection_test')
-	rospy.Subscriber("/camera/image_raw", Image, isBall)
-	r = rospy.Rate(10)
-	while not rospy.is_shutdown():
-		r.sleep()
+	# Train network
+	n = neuralnet.Network()
+	print "Average error in test set: {}".format(n.trainTest(labels, imgDir))
+	n.save('one-layer-conv-x500-augmented.pkl', NETWORK_FILEPATH)

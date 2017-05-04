@@ -22,6 +22,7 @@ import numpy as np
 import cPickle as pickle
 from lasagne import layers
 from lasagne.updates import nesterov_momentum
+from lasagne.nonlinearities import softmax
 from nolearn.lasagne import NeuralNet
 
 # Project Imports
@@ -80,23 +81,41 @@ class Network(NeuralNet):
 			# Topography of network
 			layers=[
 				('input', layers.InputLayer),
-				('hidden1', layers.DenseLayer),
-				('hidden2', layers.DenseLayer),
-				('hidden3', layers.DenseLayer),
+				('conv1', layers.Conv2DLayer),
+				('pool1', layers.MaxPool2DLayer),
+				('conv2', layers.Conv2DLayer),
+				('pool2', layers.MaxPool2DLayer),
+				# ('conv3', layers.Conv2DLayer),
+				# ('pool3', layers.MaxPool2DLayer),
 				('hidden4', layers.DenseLayer),
 				('hidden5', layers.DenseLayer),
+
+				# ('hidden6', layers.DenseLayer),
+				# ('hidden7', layers.DenseLayer),
+				# ('hidden8', layers.DenseLayer),
+				# ('hidden9', layers.DenseLayer),
+				# ('hidden10', layers.DenseLayer),
 				('output', layers.DenseLayer),
 			],
 
 			# Layer parameters
-			input_shape=(None, 32, 32),		# Cannot include variables, unsure why
-			hidden1_num_units=100,				# Number of units in hidden layer
-			hidden2_num_units=100,				# Number of units in hidden layer
-			hidden3_num_units=100,				# Number of units in hidden layer
-			hidden4_num_units=100,				# Number of units in hidden layer
-			hidden5_num_units=100,				# Number of units in hidden layer
-			output_nonlinearity=None,			# Output layer uses identity function
-			output_num_units=1,						# Target values
+			# input_shape=(None, 32, 32),		# Cannot include variables, unsure why
+			# hidden6_num_units=500,
+			# hidden7_num_units=100,
+			# hidden8_num_units=100,
+			# hidden9_num_units=100,
+			# hidden10_num_units=100,
+			# output_num_units=1,
+			# output_nonlinearity=None,
+
+
+			# Layer parameters
+			input_shape=(None, 1, 32, 32),		# Cannot include variables, unsure why
+			conv1_num_filters=16, conv1_filter_size=(3, 3), pool1_pool_size=(2, 2),
+			conv2_num_filters=32, conv2_filter_size=(2, 2), pool2_pool_size=(2, 2),
+			# conv3_num_filters=64, conv3_filter_size=(2, 2), pool3_pool_size=(2, 2),
+			hidden4_num_units=64, hidden5_num_units=16,
+			output_num_units=1, output_nonlinearity=None,
 
 			# Optimization method
 			update=nesterov_momentum,			# a gradient descent algorithm
@@ -104,7 +123,7 @@ class Network(NeuralNet):
 			update_momentum=0.9,					# BLACKBOX
 
 			regression=True,							# BLACKBOX
-			max_epochs=1500,							# Number of times to run and re-balance the network
+			max_epochs=500,							# Number of times to run and re-balance the network
 			verbose=1,										# Print output trace or not during training
 		)
 
@@ -143,8 +162,8 @@ class Network(NeuralNet):
 			for i in xrange(len(testLabels))
 		]
 
-		avgError = sum(errors)/len(errors)
-		return avgError[0]
+		avgError = sum(errors)/float(len(errors))
+		return avgError
 
 
 	def trainWith(self, labels, filenames, filepath):
@@ -172,9 +191,18 @@ class Network(NeuralNet):
 			for imgPath in imgPaths
 		]) / 255.
 
+		# Reformat data for convolutional neural net
+		nnData = nnData.reshape(-1, 1, 32, 32)
+
 		# Match each image name with a label's value to generate an array
 		# classifying each image appropriately
 		nnLabels = np.array(utils.labelsFor(labels, filenames))
+
+
+		# Augment data by flipping all images left to right and adding to original data
+		nnDataFlipped = nnData[:, :, :, ::-1]
+		nnData = np.concatenate((nnData, nnDataFlipped), 0)
+		nnLabels = np.concatenate((nnLabels, nnLabels), 0)
 
 		print "\nFitting model to {} images.\n".format(nnData.shape[0])
 
@@ -192,7 +220,7 @@ class Network(NeuralNet):
 			(numpy.ndarray): the predicted value of each inputted image.
 
 		"""
-
+		imgs = imgs.reshape(-1, 1, 32, 32)
 		return super(Network, self).predict(imgs / 255.)
 
 	def predictFiles(self, filenames, filepath):
