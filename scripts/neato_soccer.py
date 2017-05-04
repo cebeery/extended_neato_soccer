@@ -96,7 +96,8 @@ class NeatoSoccerPlayer(object):
         Determines the location of the ball within the current image using one of multiple
         image processing options from the Vision Suite. If ball is in center of frame, 
         neato drives forward. If ball is not within center threshold, neato rotates at a
-        speed proportional to offset line up with ball and drives forward faster when aligned  
+        speed proportional to offset line up with ball and drives forward slower with greater 
+        misalignment  
         At Start    > ensure no neato motion
         Transition 1: condition(no ball) > determineBall state
         """
@@ -118,7 +119,7 @@ class NeatoSoccerPlayer(object):
             #Align with and kick ball
             if not error:
                 #determining if ball is within alignment threshold
-                window_y, window_x,_ = self.currentImg.shape
+                window_y, window_x,_ = self.img.shape
                 diff = location[0] - (window_x/2)
 
                 if math.fabs(diff) < 20:
@@ -127,11 +128,11 @@ class NeatoSoccerPlayer(object):
                     self.cmd.angular.z = 0
                 else:
                     #max diff is half window size (~320)
-                    kp_ang = .001  
-                    kp_ang = -80
+                    kp = .003  
+                    gauss = (-300,0.1)
                     #setting twist control
-                    self.cmd.linear.x = math.exp(diff**2/kp_lin**2)                         
-                    self.cmd.angular.z = -diff*kp_ang
+                    self.cmd.linear.x = gauss[1]*math.exp(diff**2/gauss[0]**2)                      
+                    self.cmd.angular.z = -diff*kp
 
         # change state if needed
         if error:
