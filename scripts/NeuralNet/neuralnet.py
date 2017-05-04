@@ -33,6 +33,7 @@ from config import CONFIG
 # Load Constants
 # NN_IMAGE_SIZE = CONFIG.get("NN_IMAGE_SIZE")
 PROJECT_DIR = CONFIG.get("PROJECT_DIR")
+NN_IMAGE_SIZE = CONFIG.get("NN_IMAGE_SIZE")
 
 
 def load(filename="neural-net.pkl", filepath="save"):
@@ -52,6 +53,15 @@ def load(filename="neural-net.pkl", filepath="save"):
 	n = Network()
 	n.load_params_from(os.path.join(filepath, filename))
 	return n
+
+# # 3 Layer MLP
+# layers=[
+# 	('input', layers.InputLayer),
+#		('hidden1', layers.DenseLayer),
+#		('hidden2', layers.DenseLayer),
+#		('hidden3', layers.DenseLayer),
+# 	('output', layers.DenseLayer),
+# ],
 
 
 class Network(NeuralNet):
@@ -78,44 +88,53 @@ class Network(NeuralNet):
 
 		# Configure neural net
 		super(Network, self).__init__(
-			# Topography of network
+			# # Topography of network
+			# layers=[
+			# 	('input', layers.InputLayer),
+			# 	('conv1', layers.Conv2DLayer),
+			# 	('pool1', layers.MaxPool2DLayer),
+			# 	('conv2', layers.Conv2DLayer),
+			# 	('pool2', layers.MaxPool2DLayer),
+			# 	# ('conv3', layers.Conv2DLayer),
+			# 	# ('pool3', layers.MaxPool2DLayer),
+			# 	('hidden4', layers.DenseLayer),
+			# 	('hidden5', layers.DenseLayer),
+
+			# 	# ('hidden1', layers.DenseLayer),
+			# 	# ('hidden2', layers.DenseLayer),
+			# 	# ('hidden3', layers.DenseLayer),
+
+			# 	# ('hidden6', layers.DenseLayer),
+			# 	# ('hidden7', layers.DenseLayer),
+			# 	# ('hidden8', layers.DenseLayer),
+			# 	# ('hidden9', layers.DenseLayer),
+			# 	# ('hidden10', layers.DenseLayer),
+			# 	('output', layers.DenseLayer),
+			# ],
+
+			# 3 Layer MLP
 			layers=[
 				('input', layers.InputLayer),
-				('conv1', layers.Conv2DLayer),
-				('pool1', layers.MaxPool2DLayer),
-				('conv2', layers.Conv2DLayer),
-				('pool2', layers.MaxPool2DLayer),
-				# ('conv3', layers.Conv2DLayer),
-				# ('pool3', layers.MaxPool2DLayer),
-				('hidden4', layers.DenseLayer),
-				('hidden5', layers.DenseLayer),
-
-				# ('hidden6', layers.DenseLayer),
-				# ('hidden7', layers.DenseLayer),
-				# ('hidden8', layers.DenseLayer),
-				# ('hidden9', layers.DenseLayer),
-				# ('hidden10', layers.DenseLayer),
+					('hidden1', layers.DenseLayer),
+					('hidden2', layers.DenseLayer),
+					('hidden3', layers.DenseLayer),
 				('output', layers.DenseLayer),
 			],
-
-			# Layer parameters
-			# input_shape=(None, 32, 32),		# Cannot include variables, unsure why
-			# hidden6_num_units=500,
-			# hidden7_num_units=100,
-			# hidden8_num_units=100,
-			# hidden9_num_units=100,
-			# hidden10_num_units=100,
-			# output_num_units=1,
-			# output_nonlinearity=None,
+			input_shape=(None, 3, 64, 64),		# Cannot include variables, unsure why
+			hidden1_num_units=100,
+			hidden2_num_units=100,
+			hidden3_num_units=100,
+			output_num_units=1,
+			output_nonlinearity=None,
 
 
-			# Layer parameters
-			input_shape=(None, 1, 32, 32),		# Cannot include variables, unsure why
-			conv1_num_filters=16, conv1_filter_size=(3, 3), pool1_pool_size=(2, 2),
-			conv2_num_filters=32, conv2_filter_size=(2, 2), pool2_pool_size=(2, 2),
-			# conv3_num_filters=64, conv3_filter_size=(2, 2), pool3_pool_size=(2, 2),
-			hidden4_num_units=64, hidden5_num_units=16,
-			output_num_units=1, output_nonlinearity=None,
+			# # Layer parameters
+			# input_shape=(None, 1, 32, 32),		# Cannot include variables, unsure why
+			# conv1_num_filters=16, conv1_filter_size=(3, 3), pool1_pool_size=(2, 2),
+			# conv2_num_filters=32, conv2_filter_size=(2, 2), pool2_pool_size=(2, 2),
+			# # conv3_num_filters=64, conv3_filter_size=(2, 2), pool3_pool_size=(2, 2),
+			# hidden4_num_units=64, hidden5_num_units=16,
+			# output_num_units=1, output_nonlinearity=None,
 
 			# Optimization method
 			update=nesterov_momentum,			# a gradient descent algorithm
@@ -192,7 +211,8 @@ class Network(NeuralNet):
 		]) / 255.
 
 		# Reformat data for convolutional neural net
-		nnData = nnData.reshape(-1, 1, 32, 32)
+		nnData = nnData.reshape(-1, 3, NN_IMAGE_SIZE, NN_IMAGE_SIZE)
+		print nnData.shape
 
 		# Match each image name with a label's value to generate an array
 		# classifying each image appropriately
@@ -200,9 +220,9 @@ class Network(NeuralNet):
 
 
 		# Augment data by flipping all images left to right and adding to original data
-		nnDataFlipped = nnData[:, :, :, ::-1]
-		nnData = np.concatenate((nnData, nnDataFlipped), 0)
-		nnLabels = np.concatenate((nnLabels, nnLabels), 0)
+		# nnDataFlipped = nnData[:, :, :, ::-1]
+		# nnData = np.concatenate((nnData, nnDataFlipped), 0)
+		# nnLabels = np.concatenate((nnLabels, nnLabels), 0)
 
 		print "\nFitting model to {} images.\n".format(nnData.shape[0])
 
@@ -220,7 +240,7 @@ class Network(NeuralNet):
 			(numpy.ndarray): the predicted value of each inputted image.
 
 		"""
-		imgs = imgs.reshape(-1, 1, 32, 32)
+		imgs = imgs.reshape(-1, 3, NN_IMAGE_SIZE, NN_IMAGE_SIZE)
 		return super(Network, self).predict(imgs / 255.)
 
 	def predictFiles(self, filenames, filepath):

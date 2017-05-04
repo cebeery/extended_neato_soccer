@@ -61,6 +61,8 @@ class Config(object):
 					self.data[option] = float(datum)
 				elif section == "STRINGS":
 					self.data[option] = datum
+				elif section == "BOOLS":
+					self.data[option] = bool(datum)
 
 
 	def get(self, key):
